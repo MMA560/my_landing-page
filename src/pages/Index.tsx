@@ -82,19 +82,7 @@ const Index = () => {
       {/* Content Section */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <div
-              ref={orderFormRef}
-              className="lg:sticky lg:top-24 lg:self-start"
-            >
-              <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
-                <OrderForm
-                  productName="Metro Oxford"
-                  selectedSize={selectedSize}
-                  selectedColor={selectedColor}
-                />
-              </div>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16" >
             <div className="space-y-12">
               <ProductHighlights />
               <hr className="border-t border-gray-300 my-6" />
@@ -109,6 +97,18 @@ const Index = () => {
               <hr className="border-t border-gray-300 my-6" />
 
               <FAQ />
+            </div>
+            <div
+              ref={orderFormRef}
+              className="lg:sticky lg:top-24 lg:self-start"
+            >
+              <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
+                <OrderForm
+                  productName="Metro Oxford"
+                  selectedSize={selectedSize}
+                  selectedColor={selectedColor}
+                />
+              </div>
             </div>
           </div>
         </div>
