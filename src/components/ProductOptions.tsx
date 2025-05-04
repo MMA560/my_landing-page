@@ -51,7 +51,7 @@ export const ProductOptions: React.FC<ProductOptionsProps> = ({
     <div className={`${layoutClass} w-full`}>
       {/* اختيار الحجم */}
       <div className="space-y-3 flex-1 text-right">
-        <h3 className="font-medium text-lg">اختر الحجم</h3>
+        <h3 className="font-medium text-lg">اختر المقاس</h3>
         <div className="flex flex-wrap gap-2 justify-end">
           {sizes.map((size) => (
             <Button

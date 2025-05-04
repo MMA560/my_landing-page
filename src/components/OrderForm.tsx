@@ -9,12 +9,14 @@ type OrderFormProps = {
   productName: string;
   selectedSize: string | null;
   selectedColor: string | null;
+  quantity: number; // إضافة quantity إلى props
 };
 
 export const OrderForm: React.FC<OrderFormProps> = ({
   productName,
   selectedSize,
   selectedColor,
+  quantity, // إضافة quantity إلى المكونات
 }) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -26,6 +28,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     zip: "",
     notes: "",
   });
+  const [currentQuantity, setCurrentQuantity] = useState(quantity); // استخدام الكمية المبدئية
   const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (
@@ -35,13 +38,30 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (value > 0) {
+      setCurrentQuantity(value);
+    }
+  };
+
+  const handleIncrement = () => {
+    setCurrentQuantity((prev) => prev + 1);
+  };
+
+  const handleDecrement = () => {
+    if (currentQuantity > 1) {
+      setCurrentQuantity((prev) => prev - 1);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedSize || !selectedColor) {
       toast({
         title: "يرجى إكمال اختيارك",
-        description: "يرجى اختيار الحجم واللون قبل تقديم الطلب.",
+        description: "يرجى اختيار المقاس واللون قبل تقديم الطلب.",
         variant: "destructive",
       });
       return;
@@ -49,7 +69,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
     setSubmitting(true);
 
-    // Simulate form submission
+    // محاكاة تقديم الطلب
     setTimeout(() => {
       toast({
         title: "تم تقديم الطلب بنجاح!",
@@ -58,6 +78,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       setSubmitting(false);
     }, 1500);
   };
+
+  const unitPrice = 295.0; // سعر الوحدة
+  const totalPrice = unitPrice * currentQuantity; // حساب المجموع بناءً على الكمية
 
   return (
     <form
@@ -79,21 +102,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             required
           />
         </div>
-
-        {/* 
-          <div className="space-y-2">
-            <Label htmlFor="email">البريد الإلكتروني</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="email@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        */}
 
         <div className="space-y-2">
           <Label htmlFor="phone">رقم الهاتف</Label>
@@ -145,6 +153,35 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           />
         </div>
 
+        <div className="mb-8 text-right" dir="rtl">
+          <Label htmlFor="quantity" className="font-medium text-lg block mb-3">
+            العدد
+          </Label>
+          <div className="flex items-center justify-start gap-2">
+            <Button
+              onClick={handleDecrement}
+              className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground transition-all duration-200"
+            >
+              -
+            </Button>
+            <Input
+              id="quantity"
+              type="number"
+              min={1}
+              value={currentQuantity}
+              onChange={handleQuantityChange}
+              className="w-24 text-center border-none"
+              disabled
+            />
+            <Button
+              onClick={handleIncrement}
+              className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground transition-all duration-200"
+            >
+              +
+            </Button>
+          </div>
+        </div>
+
         <div className="bg-secondary/50 p-4 rounded-lg">
           <h4 className="font-medium mb-2">ملخص الطلب</h4>
           <ul className="space-y-1 text-sm">
@@ -154,7 +191,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             </li>
             {selectedSize && (
               <li className="flex justify-between">
-                <span>الحجم:</span>
+                <span>المقاس:</span>
                 <span className="font-medium">US {selectedSize}</span>
               </li>
             )}
@@ -164,9 +201,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 <span className="font-medium capitalize">{selectedColor}</span>
               </li>
             )}
+            <li className="flex justify-between">
+              <span>العدد:</span>
+              <span className="font-medium">{currentQuantity}</span>
+            </li>
             <li className="flex justify-between pt-2 border-t border-border mt-2">
               <span>المجموع:</span>
-              <span className="font-bold">$295.00</span>
+              <span className="font-bold">${totalPrice.toFixed(2)}</span>
             </li>
           </ul>
         </div>
@@ -175,7 +216,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       <Button
         type="submit"
         className="w-full bg-gold hover:bg-gold/90 text-white"
-        disabled={submitting}
+        disabled = {submitting}
       >
         {submitting ? "جارٍ المعالجة..." : "أكمل الطلب"}
       </Button>

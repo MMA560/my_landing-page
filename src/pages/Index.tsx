@@ -12,15 +12,44 @@ import { Button } from "@/components/ui/button";
 import { ProductDetails } from "@/components/ProductDetails";
 import { ProductVideo } from "@/components/ProductVideo";
 import { UserReviews } from "@/components/UserReviews";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tag } from "lucide-react";
 
 const Index = () => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>("black");
+  const [quantity, setQuantity] = useState(1);
   const orderFormRef = useRef<HTMLDivElement>(null);
 
   const scrollToOrderForm = () => {
     if (orderFormRef.current) {
       orderFormRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const categoryTags = [
+    { name: "رجالي", id: "men" },
+    { name: "رسمي", id: "formal" },
+    { name: "جلد طبيعي", id: "leather" },
+    { name: "صناعة يدوية", id: "handcrafted" },
+  ];
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (value >= 1) {
+      setQuantity(value);
+    }
+  };
+
+  const increaseQuantity = () => {
+    setQuantity(prevQuantity => prevQuantity + 1);
+  };
+
+  const decreaseQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prevQuantity => prevQuantity - 1);
     }
   };
 
@@ -42,6 +71,21 @@ const Index = () => {
                 تلتقي الحرفية اليدوية مع التصميم العصري في أحذيتنا الجلدية
                 أوكسفورد المميزة.
               </p>
+
+              {/* التصنيفات */}
+              <div className="flex flex-row-reverse flex-wrap items-center gap-2 mb-6">
+                {categoryTags.map((tag) => (
+                  <Badge
+                    key={tag.id}
+                    variant="outline"
+                    className="bg-secondary/30 hover:bg-secondary/50 flex items-center gap-1 px-2.5 py-1 text-sm rounded-full"
+                  >
+                    <Tag className="h-3.5 w-3.5" />
+                    {tag.name}
+                  </Badge>
+                ))}
+              </div>
+
               <div className="flex flex-row-reverse items-center space-x-reverse space-x-4 mb-6 text-right">
                 <span className="text-2xl font-bold">$295.00</span>
                 <span className="text-sm line-through text-muted-foreground">
@@ -52,13 +96,43 @@ const Index = () => {
                 </span>
               </div>
 
-              <div className="mb-8">
+              <div className="mb-6">
                 <ProductOptions
                   selectedSize={selectedSize}
                   selectedColor={selectedColor}
                   onSizeChange={setSelectedSize}
                   onColorChange={setSelectedColor}
                 />
+              </div>
+
+              {/* الكمية */}
+              <div className="mb-8 text-right" dir="rtl">
+                <Label htmlFor="quantity" className="font-medium text-lg block mb-3">
+                 العدد
+                </Label>
+                <div className="flex items-center justify-start gap-2">
+                  <Button
+                    onClick={decreaseQuantity}
+                    className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground"
+                  >
+                    -
+                  </Button>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min={1}
+                    value={quantity}
+                    onChange={handleQuantityChange}
+                    className="w-24 text-center border-none"
+                    disabled
+                  />
+                  <Button
+                    onClick={increaseQuantity}
+                    className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground"
+                  >
+                    +
+                  </Button>
+                </div>
               </div>
 
               <Button
@@ -82,20 +156,16 @@ const Index = () => {
       {/* Content Section */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16" >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             <div className="space-y-12">
               <ProductHighlights />
               <hr className="border-t border-gray-300 my-6" />
-
               <ProductDetails />
               <hr className="border-t border-gray-300 my-6" />
-
               <ProductVideo />
               <hr className="border-t border-gray-300 my-6" />
-
               <UserReviews />
               <hr className="border-t border-gray-300 my-6" />
-
               <FAQ />
             </div>
             <div
@@ -107,6 +177,7 @@ const Index = () => {
                   productName="Metro Oxford"
                   selectedSize={selectedSize}
                   selectedColor={selectedColor}
+                  quantity={quantity}
                 />
               </div>
             </div>
