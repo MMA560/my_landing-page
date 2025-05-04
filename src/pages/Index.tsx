@@ -18,8 +18,28 @@ import { Label } from "@/components/ui/label";
 import { Tag } from "lucide-react";
 
 const Index = () => {
+  const productData = {
+    name: "مترو أوكسفورد",
+    nameEn: "Metro Oxford",
+    label: "منتجات راقية",
+    description:
+      "تلتقي الحرفية اليدوية مع التصميم العصري في أحذيتنا الجلدية أوكسفورد المميزة.",
+    price: 295,
+    oldPrice: 350,
+    discount: 15,
+    tags: [
+      { name: "رجالي", id: "men" },
+      { name: "رسمي", id: "formal" },
+      { name: "جلد طبيعي", id: "leather" },
+      { name: "صناعة يدوية", id: "handcrafted" },
+    ],
+    defaultColor: "black",
+  };
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>("black");
+  const [selectedColor, setSelectedColor] = useState<string | null>(
+    productData.defaultColor
+  );
   const [quantity, setQuantity] = useState(1);
   const orderFormRef = useRef<HTMLDivElement>(null);
 
@@ -29,13 +49,6 @@ const Index = () => {
     }
   };
 
-  const categoryTags = [
-    { name: "رجالي", id: "men" },
-    { name: "رسمي", id: "formal" },
-    { name: "جلد طبيعي", id: "leather" },
-    { name: "صناعة يدوية", id: "handcrafted" },
-  ];
-
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (value >= 1) {
@@ -44,12 +57,12 @@ const Index = () => {
   };
 
   const increaseQuantity = () => {
-    setQuantity(prevQuantity => prevQuantity + 1);
+    setQuantity((prevQuantity) => prevQuantity + 1);
   };
 
   const decreaseQuantity = () => {
     if (quantity > 1) {
-      setQuantity(prevQuantity => prevQuantity - 1);
+      setQuantity((prevQuantity) => prevQuantity - 1);
     }
   };
 
@@ -62,19 +75,18 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1 animate-slide-up text-right">
               <span className="text-sm uppercase tracking-widest text-muted-foreground mb-2 inline-block">
-                مجموعة مميزة
+                {productData.label}
               </span>
               <h1 className="text-4xl md:text-5xl font-serif font-medium mb-4">
-                مترو أوكسفورد
+                {productData.name}
               </h1>
               <p className="text-lg text-muted-foreground mb-6" dir="rtl">
-                تلتقي الحرفية اليدوية مع التصميم العصري في أحذيتنا الجلدية
-                أوكسفورد المميزة.
+                {productData.description}
               </p>
 
               {/* التصنيفات */}
               <div className="flex flex-row-reverse flex-wrap items-center gap-2 mb-6">
-                {categoryTags.map((tag) => (
+                {productData.tags.map((tag) => (
                   <Badge
                     key={tag.id}
                     variant="outline"
@@ -87,12 +99,14 @@ const Index = () => {
               </div>
 
               <div className="flex flex-row-reverse items-center space-x-reverse space-x-4 mb-6 text-right">
-                <span className="text-2xl font-bold">$295.00</span>
+                <span className="text-2xl font-bold">
+                  جنيه {productData.price.toFixed(2)}
+                </span>
                 <span className="text-sm line-through text-muted-foreground">
-                  $350.00
+                جنيه {productData.oldPrice.toFixed(2)}
                 </span>
                 <span className="bg-gold/10 text-gold px-2.5 py-0.5 rounded text-sm font-medium">
-                  خصم 15%
+                  خصم {productData.discount}%
                 </span>
               </div>
 
@@ -107,8 +121,11 @@ const Index = () => {
 
               {/* الكمية */}
               <div className="mb-8 text-right" dir="rtl">
-                <Label htmlFor="quantity" className="font-medium text-lg block mb-3">
-                 العدد
+                <Label
+                  htmlFor="quantity"
+                  className="font-medium text-lg block mb-3"
+                >
+                  العدد
                 </Label>
                 <div className="flex items-center justify-start gap-2">
                   <Button
@@ -146,7 +163,7 @@ const Index = () => {
 
             <div className="order-1 lg:order-2 animate-fade-in flex justify-center">
               <div className="w-full max-w-md">
-                <Gallery selectedColor={selectedColor || "black"} />
+                <Gallery selectedColor={selectedColor || productData.defaultColor} />
               </div>
             </div>
           </div>
@@ -174,7 +191,7 @@ const Index = () => {
             >
               <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
                 <OrderForm
-                  productName="Metro Oxford"
+                  productName={productData.nameEn}
                   selectedSize={selectedSize}
                   selectedColor={selectedColor}
                   quantity={quantity}
