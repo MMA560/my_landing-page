@@ -4,9 +4,8 @@ import { useState } from "react";
 
 const videoData = {
   title: "فيديو المنتج",
-  videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1",
-  thumbnail:
-    "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?q=80&w=1635&auto=format&fit=crop",
+  videoUrl: "https://i.imgur.com/DHsgVM2.mp4",
+  thumbnail: "https://i.imgur.com/gkXVquK.png", // ✅ تم التعديل هنا
   overlayText: "شاهد نظرة عامة على المنتج",
   descriptionTitle: "الحرفية في حركة",
   description:
@@ -18,6 +17,7 @@ const videoData = {
   ],
 };
 
+
 export const ProductVideo = () => {
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -28,13 +28,12 @@ export const ProductVideo = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
         <div className="relative aspect-video bg-muted overflow-hidden rounded-lg border border-border">
           {isPlaying ? (
-            <iframe
+            <video
               className="absolute inset-0 w-full h-full"
               src={videoData.videoUrl}
-              title="Product Video"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
+              controls
+              autoPlay
+            />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <img

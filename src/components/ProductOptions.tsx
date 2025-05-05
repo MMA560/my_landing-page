@@ -21,8 +21,8 @@ const sizes: SizeOption[] = [
 
 const colors: ColorVariant[] = [
   { value: "black", label: "أسود", image: "https://i.imgur.com/0isafsF.png" },
-  { value: "black-tan", label: "أسود مطعم بيج", image: "https://i.imgur.com/qsHKkR3.png" },
-  { value: "blue-tan", label: "أزرق مطعم بيج", image: "https://i.imgur.com/WbdKmPn.png" },
+  { value: "black-tan-beige", label: "أسود مطعم بيج", image: "https://i.imgur.com/qsHKkR3.png" },
+  { value: "blue-tan-beige", label: "أزرق مطعم بيج", image: "https://i.imgur.com/WbdKmPn.png" },
 ];
 
 type ProductOptionsProps = {
