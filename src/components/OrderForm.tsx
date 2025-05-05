@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import emailjs from "@emailjs/browser";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,13 +22,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   setQuantity,
 }) => {
   const { toast } = useToast();
+  const form = useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     phone: "",
+    second_phone: "",
     address: "",
     city: "",
-    zip: "",
+    governate: "",
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
@@ -72,14 +74,36 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
     setSubmitting(true);
 
-    // محاكاة تقديم الطلب
-    setTimeout(() => {
-      toast({
-        title: "تم تقديم الطلب بنجاح!",
-        description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
-      });
-      setSubmitting(false);
-    }, 1500);
+    if (form.current) {
+      // إرسال البريد الإلكتروني باستخدام EmailJS
+      emailjs
+        .sendForm(
+          "service_ud3sq9q", // معرف الخدمة
+          "template_slive9l", // معرف القالب
+          form.current,
+          {
+            publicKey: "Ax15POzP7S7MfbU9E", // المفتاح العام من EmailJS
+          }
+        )
+        .then(
+          () => {
+            toast({
+              title: "تم تقديم الطلب بنجاح!",
+              description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
+            });
+          },
+          (error) => {
+            toast({
+              title: "حدث خطأ أثناء إرسال الطلب",
+              description: "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
+              variant: "destructive",
+            });
+          }
+        )
+        .finally(() => {
+          setSubmitting(false);
+        });
+    }
   };
 
   const unitPrice = 490.0; // سعر الوحدة
@@ -87,11 +111,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const totalWithShipping = totalPrice + shippingCost; // المجموع الكلي مع الشحن
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 max-w-xl mx-auto"
-      dir="rtl"
-    >
+    <form ref={form} onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto" dir="rtl">
       <h3 className="text-xl font-serif">أكمل طلبك</h3>
 
       <div className="space-y-4">
@@ -120,13 +140,36 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="second_phone">رقم الهاتف الاحتياطي - اختياري</Label>
+          <Input
+            id="second_phone"
+            name="second_phone"
+            placeholder="(555) 789-3456 (اختياري)"
+            value={formData.second_phone}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="address">عنوان الشحن</Label>
           <Input
             dir="rtl"
             id="address"
             name="address"
-            placeholder="123 شارع  مصطفي كامل ، شقة 4"
+            placeholder="123 شارع مصطفى كامل، شقة 4"
             value={formData.address}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="governate">المحافظة</Label>
+          <Input
+            id="governate"
+            name="governate"
+            placeholder="القاهرة"
+            value={formData.governate}
             onChange={handleChange}
             required
           />
@@ -137,7 +180,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           <Input
             id="city"
             name="city"
-            placeholder="القاهرة، مصر"
+            placeholder="مصر الجديدة"
             value={formData.city}
             onChange={handleChange}
             required
@@ -164,6 +207,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           <div className="flex items-center justify-start gap-2">
             <Button
               onClick={handleDecrement}
+              type="button"
               className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground transition-all duration-200"
             >
               -
@@ -172,6 +216,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               id="quantity"
               type="number"
               min={1}
+              name="quantity"
               value={quantity}
               onChange={handleQuantityChange}
               className="w-24 text-center border-none"
@@ -179,6 +224,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             />
             <Button
               onClick={handleIncrement}
+              type="button"
               className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground transition-all duration-200"
             >
               +
@@ -196,7 +242,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             {selectedSize && (
               <li className="flex justify-between">
                 <span>المقاس:</span>
-                <span className="font-medium"> {selectedSize}</span>
+                <span className="font-medium">{selectedSize}</span>
               </li>
             )}
             {selectedColor && (
@@ -213,33 +259,22 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               <span>تكلفة الشحن:</span>
               <span className="font-medium">{shippingCost} جنيه</span>
             </li>
-            <li className="flex justify-between pt-2 border-t border-border mt-2">
-              <span>المجموع:</span>
-              <span className="font-bold">{totalWithShipping.toFixed(2)} جنيه</span>
+            <li className="flex justify-between">
+              <span>المجموع الكلي:</span>
+              <span className="font-medium">{totalWithShipping} جنيه</span>
             </li>
           </ul>
+          <Input type="hidden" name="product_name" value={productName} />
+          <Input type="hidden" name="selected_size" value={selectedSize || ""} />
+          <Input type="hidden" name="selected_color" value={selectedColor || ""} />
+          <Input type="hidden" name="shipping_cost" value={shippingCost} />
+          <Input type="hidden" name="total_with_shipping" value={totalWithShipping.toFixed(2)} />
         </div>
+
+        <Button type="submit" className="w-full mt-4 bg-gold hover:bg-gold/90 text-white" disabled={submitting}>
+          {submitting ? "جاري الإرسال..." : "تقديم الطلب"}
+        </Button>
       </div>
-
-      <Button
-        type="submit"
-        className="w-full bg-gold hover:bg-gold/90 text-white"
-        disabled={submitting}
-      >
-        {submitting ? "جارٍ المعالجة..." : "أكمل الطلب"}
-      </Button>
-
-      <p className="text-xs text-center text-muted-foreground">
-        عند تقديمك لهذا الطلب، فإنك توافق على{" "}
-        <a href="#" className="underline">
-          شروط الخدمة
-        </a>{" "}
-        و{" "}
-        <a href="#" className="underline">
-          سياسة الخصوصية
-        </a>
-        .
-      </p>
     </form>
   );
 };
