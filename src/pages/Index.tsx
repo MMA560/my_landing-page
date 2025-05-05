@@ -79,7 +79,7 @@ const Index = () => {
               <span className="text-sm uppercase tracking-widest text-muted-foreground mb-2 inline-block">
                 {productData.label}
               </span>
-              <h1 className="text-4xl md:text-5xl font-serif font-medium mb-4">
+              <h1 className="text-4xl md:text-5xl font-serif font-medium mb-4" dir="rtl">
                 {productData.name}
               </h1>
               <p className="text-lg text-muted-foreground mb-6" dir="rtl">
