@@ -9,14 +9,16 @@ type OrderFormProps = {
   productName: string;
   selectedSize: string | null;
   selectedColor: string | null;
-  quantity: number; // إضافة quantity إلى props
+  quantity: number;
+  setQuantity: React.Dispatch<React.SetStateAction<number>>;
 };
 
 export const OrderForm: React.FC<OrderFormProps> = ({
   productName,
   selectedSize,
   selectedColor,
-  quantity, // إضافة quantity إلى المكونات
+  quantity,
+  setQuantity,
 }) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
@@ -28,8 +30,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     zip: "",
     notes: "",
   });
-  const [currentQuantity, setCurrentQuantity] = useState(quantity); // استخدام الكمية المبدئية
   const [submitting, setSubmitting] = useState(false);
+
+  const shippingCost = 50; // تكلفة الشحن
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -41,17 +44,17 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (value > 0) {
-      setCurrentQuantity(value);
+      setQuantity(value);
     }
   };
 
   const handleIncrement = () => {
-    setCurrentQuantity((prev) => prev + 1);
+    setQuantity((prev) => prev + 1);
   };
 
   const handleDecrement = () => {
-    if (currentQuantity > 1) {
-      setCurrentQuantity((prev) => prev - 1);
+    if (quantity > 1) {
+      setQuantity((prev) => prev - 1);
     }
   };
 
@@ -79,8 +82,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     }, 1500);
   };
 
-  const unitPrice = 295.0; // سعر الوحدة
-  const totalPrice = unitPrice * currentQuantity; // حساب المجموع بناءً على الكمية
+  const unitPrice = 490.0; // سعر الوحدة
+  const totalPrice = unitPrice * quantity; // حساب المجموع بناءً على الكمية
+  const totalWithShipping = totalPrice + shippingCost; // المجموع الكلي مع الشحن
 
   return (
     <form
@@ -168,7 +172,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               id="quantity"
               type="number"
               min={1}
-              value={currentQuantity}
+              value={quantity}
               onChange={handleQuantityChange}
               className="w-24 text-center border-none"
               disabled
@@ -192,7 +196,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             {selectedSize && (
               <li className="flex justify-between">
                 <span>المقاس:</span>
-                <span className="font-medium">US {selectedSize}</span>
+                <span className="font-medium"> {selectedSize}</span>
               </li>
             )}
             {selectedColor && (
@@ -203,11 +207,15 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             )}
             <li className="flex justify-between">
               <span>العدد:</span>
-              <span className="font-medium">{currentQuantity}</span>
+              <span className="font-medium">{quantity}</span>
+            </li>
+            <li className="flex justify-between">
+              <span>تكلفة الشحن:</span>
+              <span className="font-medium">{shippingCost} جنيه</span>
             </li>
             <li className="flex justify-between pt-2 border-t border-border mt-2">
               <span>المجموع:</span>
-              <span className="font-bold">${totalPrice.toFixed(2)}</span>
+              <span className="font-bold">{totalWithShipping.toFixed(2)} جنيه</span>
             </li>
           </ul>
         </div>
@@ -216,7 +224,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       <Button
         type="submit"
         className="w-full bg-gold hover:bg-gold/90 text-white"
-        disabled = {submitting}
+        disabled={submitting}
       >
         {submitting ? "جارٍ المعالجة..." : "أكمل الطلب"}
       </Button>

@@ -19,19 +19,20 @@ import { Tag } from "lucide-react";
 
 const Index = () => {
   const productData = {
-    name: "مترو أوكسفورد",
-    nameEn: "Metro Oxford",
-    label: "منتجات راقية",
+    name: "كوتشي NIKE SV5",
+    nameEn: "NIKE SV5",
+    label: "كفاءة وأناقة",
     description:
-      "تلتقي الحرفية اليدوية مع التصميم العصري في أحذيتنا الجلدية أوكسفورد المميزة.",
-    price: 295,
-    oldPrice: 350,
-    discount: 15,
+      "كوتشي نايك مصمم لراحتك في كل خطوة، مثالي للمهام اليومية والخروجات، يجمع بين الشكل العصري والأداء العملي بخامات عالية الجودة.",
+    price: 490,
+    oldPrice: 550,
+    discount: 11,
     tags: [
       { name: "رجالي", id: "men" },
-      { name: "رسمي", id: "formal" },
-      { name: "جلد طبيعي", id: "leather" },
-      { name: "صناعة يدوية", id: "handcrafted" },
+      { name: "مناسب للمهام اليومية", id: "daily" },
+      { name: "نعل P.V.C بيور", id: "pvc-sole" },
+      { name: "فرش طبي", id: "medical-insole" },
+      { name: "تلبيس مظبوط", id: "perfect-fit" },
     ],
     defaultColor: "black",
   };
@@ -40,6 +41,7 @@ const Index = () => {
   const [selectedColor, setSelectedColor] = useState<string | null>(
     productData.defaultColor
   );
+  // Shared quantity state between components
   const [quantity, setQuantity] = useState(1);
   const orderFormRef = useRef<HTMLDivElement>(null);
 
@@ -103,7 +105,7 @@ const Index = () => {
                   جنيه {productData.price.toFixed(2)}
                 </span>
                 <span className="text-sm line-through text-muted-foreground">
-                جنيه {productData.oldPrice.toFixed(2)}
+                  جنيه {productData.oldPrice.toFixed(2)}
                 </span>
                 <span className="bg-gold/10 text-gold px-2.5 py-0.5 rounded text-sm font-medium">
                   خصم {productData.discount}%
@@ -119,7 +121,7 @@ const Index = () => {
                 />
               </div>
 
-              {/* الكمية */}
+              {/* العدد*/}
               <div className="mb-8 text-right" dir="rtl">
                 <Label
                   htmlFor="quantity"
@@ -195,6 +197,7 @@ const Index = () => {
                   selectedSize={selectedSize}
                   selectedColor={selectedColor}
                   quantity={quantity}
+                  setQuantity={setQuantity}
                 />
               </div>
             </div>
