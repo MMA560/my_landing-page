@@ -35,7 +35,7 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ scrollToOrderForm }) => {
           onClick={scrollToOrderForm}
           className="bg-gold hover:bg-gold/90 text-white text-xs py-1 px-3"
         >
-          Order Now
+          تقديم طلب
         </Button>
       </div>
     </div>
