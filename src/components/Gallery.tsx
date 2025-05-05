@@ -26,7 +26,7 @@ const colorImages: Record<string, GalleryImage[]> = {
       alt: "شوز أزرق مطعم بيج - جانب"
     }
   ],
-  "black-tan": [
+  "black-tan-beige": [
     {
       src: "https://i.imgur.com/qsHKkR3.png",
       alt: "شوز أسود مطعم بيج - جانب"
@@ -44,7 +44,7 @@ const colorImages: Record<string, GalleryImage[]> = {
       alt: "شوز أسود - واجهة"
     }
   ],
-  "blue-tan": [
+  "blue-tan-beige": [
     {
       src: "https://i.imgur.com/WbdKmPn.png",
       alt: "شوز أزرق مطعم بيج - جانب"
