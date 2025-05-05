@@ -28,8 +28,8 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({ scrollToOrderForm }) => {
     >
       <div className="flex items-center justify-between">
         <div className="text-sm">
-          <p className="font-medium">Metro Oxford</p>
-          <p className="text-lg font-bold">$295.00</p>
+          <p className="font-medium">أطلب دلوقتي</p>
+          <p className="text-lg font-bold" dir="rtl">490 جنيه</p>
         </div>
         <Button 
           onClick={scrollToOrderForm}
