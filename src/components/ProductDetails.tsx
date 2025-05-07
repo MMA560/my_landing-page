@@ -28,11 +28,11 @@ const productDetailsData = {
 
 export const ProductDetails = () => {
   return (
-    <div className="space-y-6 text-right" dir="rtl">
+    <div className="space-y-6 text-right">
       <h3 className="text-xl font-serif text-center">تفاصيل المنتج</h3>
 
       <div className="space-y-4">
-        <p className="text-muted-foreground">{productDetailsData.description}</p>
+        <p className="text-muted-foreground" dir="rtl">{productDetailsData.description}</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
           {productDetailsData.sections.map((section, index) => (
@@ -44,7 +44,7 @@ export const ProductDetails = () => {
                     key={i}
                     className="flex items-start gap-2 justify-end"
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-gold mt-1.5 order-last"></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-gold mt-1.5 order-last" ></span>
                     <span>{item}</span>
                   </li>
                 ))}
