@@ -18,7 +18,7 @@ const ThankYou = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-16">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-16" dir="rtl">
       <div className="bg-card border border-border rounded-2xl p-10 text-center shadow-xl max-w-md w-full animate-fade-in">
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
         <h1 className="text-3xl font-bold mb-4">شكرًا {customerName}!</h1>
