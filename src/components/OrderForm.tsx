@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
 
 type OrderFormProps = {
   productName: string;
@@ -33,6 +34,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const shippingCost = 50; // تكلفة الشحن
 
@@ -62,7 +64,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!selectedSize || !selectedColor) {
       toast({
         title: "يرجى إكمال اختيارك",
@@ -71,11 +73,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       });
       return;
     }
-
+  
     setSubmitting(true);
-
+  
     if (form.current) {
-      // إرسال البريد الإلكتروني باستخدام EmailJS
+      const customerName = formData.name|| "عميلنا العزيز"; // تأكد أن name="customer_name" موجود في الفورم
+  
       emailjs
         .sendForm(
           "service_ud3sq9q", // معرف الخدمة
@@ -91,6 +94,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               title: "تم تقديم الطلب بنجاح!",
               description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
             });
+            navigate("/thank-you", {
+              state: {
+                customerName: customerName,
+              },
+            });
           },
           (error) => {
             toast({
@@ -105,6 +113,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         });
     }
   };
+  
 
   const unitPrice = 490.0; // سعر الوحدة
   const totalPrice = unitPrice * quantity; // حساب المجموع بناءً على الكمية

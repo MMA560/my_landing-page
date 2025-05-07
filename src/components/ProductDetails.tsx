@@ -28,7 +28,7 @@ const productDetailsData = {
 
 export const ProductDetails = () => {
   return (
-    <div className="space-y-6 text-right">
+    <div className="space-y-6 text-right" dir="rtl">
       <h3 className="text-xl font-serif text-center">تفاصيل المنتج</h3>
 
       <div className="space-y-4">
