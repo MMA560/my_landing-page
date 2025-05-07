@@ -141,7 +141,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           <Input
             id="phone"
             name="phone"
-            placeholder="(555) 123-4567"
+            placeholder="(555) 123-4567 - يًفضّل عليه واتساب"
             value={formData.phone}
             onChange={handleChange}
             required
@@ -276,6 +276,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           <Input type="hidden" name="product_name" value={productName} />
           <Input type="hidden" name="selected_size" value={selectedSize || ""} />
           <Input type="hidden" name="selected_color" value={selectedColor || ""} />
+          <Input type="hidden" name="quantity" value={quantity} />
           <Input type="hidden" name="shipping_cost" value={shippingCost} />
           <Input type="hidden" name="total_with_shipping" value={totalWithShipping.toFixed(2)} />
         </div>
