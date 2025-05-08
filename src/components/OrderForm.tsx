@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import emailjs from "@emailjs/browser";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +61,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
   
     if (!selectedSize || !selectedColor) {
@@ -77,43 +76,62 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     setSubmitting(true);
   
     if (form.current) {
-      const customerName = formData.name|| "عميلنا العزيز"; // تأكد أن name="customer_name" موجود في الفورم
+      const customerName = formData.name || "عميلنا العزيز"; // تأكد أن name="customer_name" موجود في الفورم
   
-      emailjs
-        .sendForm(
-          "service_ud3sq9q", // معرف الخدمة
-          "template_slive9l", // معرف القالب
-          form.current,
-          {
-            publicKey: "Ax15POzP7S7MfbU9E", // المفتاح العام من EmailJS
-          }
-        )
-        .then(
-          () => {
-            toast({
-              title: "تم تقديم الطلب بنجاح!",
-              description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
-            });
-            navigate("/thank-you", {
-              state: {
-                customerName: customerName,
-              },
-            });
+      try {
+        const response = await fetch("https://order-manager-gules.vercel.app/order-app/api/v1/create-order/?to_email=mo3geza380@gmail.com", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-          (error) => {
-            toast({
-              title: "حدث خطأ أثناء إرسال الطلب",
-              description: "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
-              variant: "destructive",
-            });
-          }
-        )
-        .finally(() => {
-          setSubmitting(false);
+          body: JSON.stringify({
+            name: formData.name,
+            phone: formData.phone,
+            second_phone: formData.second_phone,
+            address: formData.address,
+            city: formData.city,
+            state: formData.governate,
+            notes: formData.notes,
+            product: productName,
+            color: selectedColor,
+            size: selectedSize,
+            shipping: 50,
+            total_cost: totalWithShipping,
+          }),
         });
+  
+        if (response.ok) {
+          toast({
+            title: "تم تقديم الطلب بنجاح!",
+            description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
+          });
+  
+          navigate("/thank-you", {
+            state: {
+              customerName: customerName,
+            },
+          });
+        } else {
+          toast({
+            title: "حدث خطأ أثناء إرسال الطلب",
+            description: "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "حدث خطأ غير متوقع",
+          description: "لم نتمكن من الاتصال بالخادم. يرجى المحاولة لاحقًا.",
+          variant: "destructive",
+        });
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
   
+  
+  console.log(formData)
 
   const unitPrice = 490.0; // سعر الوحدة
   const totalPrice = unitPrice * quantity; // حساب المجموع بناءً على الكمية
