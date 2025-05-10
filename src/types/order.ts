@@ -21,7 +21,7 @@ export const orderStatusColors: Record<OrderStatus, string> = {
   "canceled": "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
 };
 
-// تعريف نموذج الطلب
+// تعريف نموذج الطلب (المعدل)
 export interface Order {
   order_id: number;
   phone: string;
@@ -33,13 +33,13 @@ export interface Order {
   size: string;
   total_cost: number;
   updated_at: string;
-  second_phone: string;
+  second_phone: string | null; // تم التعديل: يمكن أن يكون string أو null
   email: string | null;
   state: string;
-  notes: string;
+  notes: string | null; // تم التعديل: يمكن أن يكون string أو null
   product: string;
   image_url: string | null;
-  shipping: string;
+  shipping: number; // تم التعديل: يجب أن يكون number
   status: OrderStatus;
   is_read: boolean; // للتأكد من وجود خاصية is_read
 }

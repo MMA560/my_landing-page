@@ -10,7 +10,6 @@ import { RefreshCw, Plus } from "lucide-react";
 import { OrdersFilter } from "@/components/admin/orders/OrdersFilter";
 import { OrdersTable } from "@/components/admin/orders/OrdersTable";
 import { OrderDetailsSheet } from "@/components/admin/orders/OrderDetailsSheet";
-import { OrderFormSheet } from "@/components/admin/orders/OrderFormSheet";
 import { DeleteOrderDialog } from "@/components/admin/orders/DeleteOrderDialog";
 
 export default function OrdersManagement() {
@@ -284,33 +283,7 @@ export default function OrdersManagement() {
         }}
       />
 
-      {/* Order Form Sheet (لوحة نموذج الطلب) */}
-      <OrderFormSheet
-        order={selectedOrder}
-        isOpen={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        onSuccess={(updatedOrder) => {
-          setIsFormOpen(false);
-          
-          // تحديث قائمة الطلبات مباشرة بعد الحفظ
-          if (updatedOrder) {
-            queryClient.setQueryData(["orders"], (oldData: Order[] | undefined) => {
-              if (!oldData) return [];
-              // إذا كان طلب جديد، أضفه إلى بداية القائمة
-              if (!selectedOrder) {
-                return [updatedOrder, ...oldData];
-              }
-              // إذا كان طلب موجود، قم بتحديثه
-              return oldData.map(order => 
-                order.order_id === updatedOrder.order_id ? { ...order, ...updatedOrder } : order
-              );
-            });
-          }
-          
-          // إعادة جلب الطلبات لضمان التحديث الكامل
-          queryClient.invalidateQueries({ queryKey: ["orders"] });
-        }}
-      />
+      
 
       {/* Delete Confirmation Dialog (حوار تأكيد الحذف) */}
       <DeleteOrderDialog

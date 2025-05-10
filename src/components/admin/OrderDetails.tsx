@@ -3,44 +3,8 @@ import { arSA } from "date-fns/locale";
 import { useState, useEffect, useCallback } from 'react';
 import { BASE_URL } from "@/config/Config";
 
-// تعريف أنواع حالة الطلب
-export type OrderStatus = "Pending" | "delivering" | "delivered";
-
-// تعريف النصوص العربية لحالات الطلب
-export const orderStatusArabic: Record<OrderStatus, string> = {
-  "Pending": "قيد الانتظار",
-  "delivering": "قيد التسليم",
-  "delivered": "تم التسليم",
-};
-
-// تعريف الألوان المرتبطة بحالات الطلب (تستخدم في Tailwind CSS)
-export const orderStatusColors: Record<OrderStatus, string> = {
-  "Pending": "bg-yellow-100 text-yellow-800",
-  "delivering": "bg-blue-100 text-blue-800",
-  "delivered": "bg-green-100 text-green-800",
-};
-
-// تعريف واجهة بيانات الطلب (Order)
-export interface Order {
-  order_id: number;
-  phone: string;
-  name: string;
-  address: string;
-  city: string;
-  created_at: string;
-  color: string;
-  size: string;
-  total_cost: number;
-  updated_at: string;
-  second_phone: string | null;
-  email: string | null;
-  state: string;
-  notes: string | null;
-  product: string;
-  image_url: string | null;
-  shipping: string;
-  status: OrderStatus;
-}
+// استيراد الأنواع والثوابت من ملف الأنواع المركزي (src/types/order.ts)
+import { Order, OrderStatus, orderStatusArabic, orderStatusColors } from '../../types/order'; // تأكد من المسار النسبي الصحيح
 
 // تعريف خصائص المكون (Props)
 interface OrderDetailsProps {
@@ -90,48 +54,102 @@ export default function OrderDetails({ order, onSaveSuccess }: OrderDetailsProps
 
   // معالج حفظ التعديلات
   const handleSave = async () => {
-    const payload = Object.entries(changedFields).reduce((acc, [field, isChanged]) => {
-      const orderField = field as keyof Order;
+    const payload: Partial<Order> = {}; // تهيئة الكائن payload
 
-      if (isChanged && Object.prototype.hasOwnProperty.call(formState, orderField)) {
-        acc[orderField] = formState[orderField];
-      }
-      return acc;
-    }, {} as Partial<Order>);
+    // التحقق من كل حقل على حدة
+    if (changedFields.order_id) {
+        payload.order_id = formState.order_id;
+    }
+    if (changedFields.phone) {
+        payload.phone = formState.phone;
+    }
+    if (changedFields.name) {
+        payload.name = formState.name;
+    }
+    if (changedFields.address) {
+        payload.address = formState.address;
+    }
+    if (changedFields.city) {
+        payload.city = formState.city;
+    }
+    // created_at و updated_at عادة لا يتم تعديلهما يدوياً، ولكن إذا كانا كذلك:
+    if (changedFields.created_at) {
+        payload.created_at = formState.created_at;
+    }
+    if (changedFields.color) {
+        payload.color = formState.color;
+    }
+    if (changedFields.size) {
+        payload.size = formState.size;
+    }
+    if (changedFields.total_cost) {
+        payload.total_cost = formState.total_cost;
+    }
+    if (changedFields.updated_at) { // عادة لا يتم تعديله يدوياً
+        payload.updated_at = formState.updated_at;
+    }
+    if (changedFields.second_phone) {
+        payload.second_phone = formState.second_phone;
+    }
+    if (changedFields.email) {
+        payload.email = formState.email;
+    }
+    if (changedFields.state) {
+        payload.state = formState.state;
+    }
+    if (changedFields.notes) {
+        payload.notes = formState.notes;
+    }
+    if (changedFields.product) {
+        payload.product = formState.product;
+    }
+    if (changedFields.image_url) {
+        payload.image_url = formState.image_url;
+    }
+    if (changedFields.shipping) {
+        payload.shipping = formState.shipping;
+    }
+    if (changedFields.status) {
+        payload.status = formState.status;
+    }
+    if (changedFields.is_read) { // إذا كانت هذه الخاصية قابلة للتعديل
+        payload.is_read = formState.is_read;
+    }
 
+    // بقية الكود تظل كما هي تماماً
     const hasChanges = Object.keys(payload).length > 0;
 
     if (!hasChanges) {
-      setIsEditing(false);
-      return;
+        setIsEditing(false);
+        return;
     }
 
     try {
-      const response = await fetch(`${BASE_URL}/order-app/api/v1/orders/${order.order_id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+        const response = await fetch(`${BASE_URL}/order-app/api/v1/orders/${order.order_id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        alert(`فشل في حفظ الطلب: ${errorData.message || response.statusText || response.status}`);
-        return;
-      }
+        if (!response.ok) {
+            const errorData = await response.json();
+            alert(`فشل في حفظ الطلب: ${errorData.message || response.statusText || response.status}`);
+            return;
+        }
 
-      if (onSaveSuccess) {
-        onSaveSuccess(formState);
-      }
+        if (onSaveSuccess) {
+            onSaveSuccess(formState);
+        }
 
-      setIsEditing(false);
-      setChangedFields({});
+        setIsEditing(false);
+        setChangedFields({});
 
     } catch (error) {
-      alert("حدث خطأ أثناء حفظ الطلب.");
+        alert("حدث خطأ أثناء حفظ الطلب.");
     }
-  };
+};
 
   // دالة إلغاء التعديل
   const handleCancel = () => {
@@ -236,7 +254,7 @@ export default function OrderDetails({ order, onSaveSuccess }: OrderDetailsProps
         </p>
       )}
     </div>
-  ), [isEditing, FormField]);
+  ), [isEditing, FormField, formatCurrency]); // إضافة formatCurrency إلى dependencies
 
   return (
     <div className="mt-6 space-y-6">
@@ -326,6 +344,8 @@ export default function OrderDetails({ order, onSaveSuccess }: OrderDetailsProps
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="bg-muted/50 p-2 rounded-md">
               <span className="text-muted-foreground text-sm">سعر المنتج:</span>
+              {/* هنا يجب أن تستخدم formState للبيانات التي يتم تعديلها، ولكن القيمة الأصلية لسعر المنتج تعتمد على order.total_cost - order.shipping */}
+              {/* يجب التأكد من أن حساب سعر المنتج يعتمد على قيمة ثابتة أو تتم إدارته بشكل منفصل إذا كان dynamic */}
               {isEditing ? (
                 <p className="font-medium">{formatCurrency(Number(formState.total_cost) - Number(formState.shipping))}</p>
               ) : (

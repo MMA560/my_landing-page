@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ export default function AdminLayout() {
     localStorage.removeItem("adminLoggedIn");
     toast({
       title: "تم تسجيل الخروج بنجاح",
-      description: "نتمنى لك يوما سعيدا"
+      description: "نتمنى لك يوما سعيدا",
     });
     navigate("/admin/login");
   };
@@ -96,16 +95,7 @@ export default function AdminLayout() {
           <div className="flex items-center gap-4">
             {/*
             
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-full"
-            >
-              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              <span className="sr-only">تبديل المظهر</span>
-            </Button>
-            */}
+            
 
             {/* Logout Button */}
             <Button variant="ghost" size="icon" onClick={handleLogout}>
@@ -117,7 +107,10 @@ export default function AdminLayout() {
 
         {/* Mobile Sidebar Overlay */}
         {isMobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setIsMobileMenuOpen(false)} />
+          <div
+            className="md:hidden fixed inset-0 z-40 bg-black/50"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
         )}
 
         {/* Mobile Sidebar */}
@@ -129,7 +122,11 @@ export default function AdminLayout() {
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between h-16 px-4 border-b">
               <span className="font-bold text-lg">القائمة</span>
-              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
