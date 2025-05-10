@@ -3,7 +3,6 @@ import { Header } from "@/components/Header";
 import { Gallery } from "@/components/Gallery";
 import { ProductOptions } from "@/components/ProductOptions";
 import { ProductHighlights } from "@/components/ProductHighlights";
-import { CustomerReviews } from "@/components/CustomerReviews";
 import { FAQ } from "@/components/FAQ";
 import { OrderForm } from "@/components/OrderForm";
 import { Footer } from "@/components/Footer";

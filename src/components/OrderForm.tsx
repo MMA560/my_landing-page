@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "@/config/Config";
 
 type OrderFormProps = {
   productName: string;
@@ -79,7 +80,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       const customerName = formData.name || "عميلنا العزيز"; // تأكد أن name="customer_name" موجود في الفورم
   
       try {
-        const response = await fetch("https://order-manager-gules.vercel.app/order-app/api/v1/create-order/?to_email=mo3geza380@gmail.com", {
+        const response = await fetch(`${BASE_URL}/order-app/api/v1/create-order/?to_email=mo3geza380@gmail.com`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -159,7 +160,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           <Input
             id="phone"
             name="phone"
-            placeholder="(555) 123-4567 - يًفضّل عليه واتساب"
+            placeholder="01x xxxxxxxx - يًفضّل عليه واتساب"
             value={formData.phone}
             onChange={handleChange}
             required
@@ -171,7 +172,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           <Input
             id="second_phone"
             name="second_phone"
-            placeholder="(555) 789-3456 (اختياري)"
+            placeholder="01x xxxxxxxx (اختياري)"
             value={formData.second_phone}
             onChange={handleChange}
           />
