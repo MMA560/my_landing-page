@@ -106,7 +106,7 @@ export function OrdersTable({
                   <TableHead>رقم الطلب</TableHead>
                   <TableHead>اسم العميل</TableHead>
                   <TableHead>الهاتف</TableHead>
-                  <TableHead>المدينة</TableHead>
+                  <TableHead>المحافظة</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>التكلفة</TableHead>
                   <TableHead>عدد القطع</TableHead> {/* <---  العمود الجديد  ---> */}
@@ -132,7 +132,7 @@ export function OrdersTable({
                       <TableCell dir="ltr" className="text-right">
                         {order.phone}
                       </TableCell>
-                      <TableCell>{order.city}</TableCell>
+                      <TableCell>{order.state}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
