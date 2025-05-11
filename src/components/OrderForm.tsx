@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config/Config";
+import { RefreshCcwDot } from "lucide-react"; // تم إضافة هذا الاستيراد
 
 type OrderFormProps = {
   productName: string;
@@ -64,7 +65,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     if (!selectedSize || !selectedColor) {
       toast({
         title: "يرجى إكمال اختيارك",
@@ -73,40 +74,44 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       });
       return;
     }
-  
+
     setSubmitting(true);
-  
+
     if (form.current) {
       const customerName = formData.name || "عميلنا العزيز"; // تأكد أن name="customer_name" موجود في الفورم
-  
+
       try {
-        const response = await fetch(`${BASE_URL}/order-app/api/v1/create-order/?to_email=mo3geza380@gmail.com`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            phone: formData.phone,
-            second_phone: formData.second_phone,
-            address: formData.address,
-            city: formData.city,
-            state: formData.governate,
-            notes: formData.notes,
-            product: productName,
-            color: selectedColor,
-            size: selectedSize,
-            shipping: 50,
-            total_cost: totalWithShipping,
-          }),
-        });
-  
+        const response = await fetch(
+          `${BASE_URL}/order-app/api/v1/create-order/?to_email=mo3geza380@gmail.com`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: formData.name,
+              phone: formData.phone,
+              second_phone: formData.second_phone,
+              address: formData.address,
+              city: formData.city,
+              state: formData.governate,
+              notes: formData.notes,
+              product: productName,
+              color: selectedColor,
+              size: selectedSize,
+              shipping: 50,
+              total_cost: totalWithShipping,
+              quantity: quantity,
+            }),
+          }
+        );
+
         if (response.ok) {
           toast({
             title: "تم تقديم الطلب بنجاح!",
             description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
           });
-  
+
           navigate("/thank-you", {
             state: {
               customerName: customerName,
@@ -115,7 +120,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         } else {
           toast({
             title: "حدث خطأ أثناء إرسال الطلب",
-            description: "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
+            description:
+              "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
             variant: "destructive",
           });
         }
@@ -130,16 +136,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       }
     }
   };
-  
-  
-  console.log(formData)
+
+  console.log(formData);
 
   const unitPrice = 490.0; // سعر الوحدة
   const totalPrice = unitPrice * quantity; // حساب المجموع بناءً على الكمية
   const totalWithShipping = totalPrice + shippingCost; // المجموع الكلي مع الشحن
 
   return (
-    <form ref={form} onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto" dir="rtl">
+    <form
+      ref={form}
+      onSubmit={handleSubmit}
+      className="space-y-6 max-w-xl mx-auto"
+      dir="rtl"
+    >
       <h3 className="text-xl font-serif">أكمل طلبك</h3>
 
       <div className="space-y-4">
@@ -293,15 +303,41 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             </li>
           </ul>
           <Input type="hidden" name="product_name" value={productName} />
-          <Input type="hidden" name="selected_size" value={selectedSize || ""} />
-          <Input type="hidden" name="selected_color" value={selectedColor || ""} />
+          <Input
+            type="hidden"
+            name="selected_size"
+            value={selectedSize || ""}
+          />
+          <Input
+            type="hidden"
+            name="selected_color"
+            value={selectedColor || ""}
+          />
           <Input type="hidden" name="quantity" value={quantity} />
           <Input type="hidden" name="shipping_cost" value={shippingCost} />
-          <Input type="hidden" name="total_with_shipping" value={totalWithShipping.toFixed(2)} />
+          <Input
+            type="hidden"
+            name="total_with_shipping"
+            value={totalWithShipping.toFixed(2)}
+          />
         </div>
 
-        <Button type="submit" className="w-full mt-4 bg-gold hover:bg-gold/90 text-white" disabled={submitting}>
-          {submitting ? "جاري الإرسال..." : "تقديم الطلب"}
+        <Button
+          type="submit"
+          className="w-full mt-4 bg-gold hover:bg-gold/90 text-white"
+          disabled={submitting}
+        >
+          {submitting ? (
+            <span className="flex items-center justify-center">
+              {" "}
+              {/* إضافة flex container لترتيب العناصر */}
+              جاري الإرسال
+              <RefreshCcwDot className="animate-spin mr-2" size={18} />{" "}
+              {/* الأيقونة بعد النص مع هامش يمين */}
+            </span>
+          ) : (
+            "تقديم الطلب"
+          )}
         </Button>
       </div>
     </form>

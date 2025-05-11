@@ -29,17 +29,18 @@ export interface Order {
   address: string;
   city: string;
   created_at: string;
-  color: string;
-  size: string;
+  color: string | null;
+  size: string | null;
   total_cost: number;
   updated_at: string;
-  second_phone: string | null; // تم التعديل: يمكن أن يكون string أو null
+  second_phone: string | null;
   email: string | null;
   state: string;
-  notes: string | null; // تم التعديل: يمكن أن يكون string أو null
+  notes: string | null;
   product: string;
   image_url: string | null;
-  shipping: number; // تم التعديل: يجب أن يكون number
+  shipping: number | null;
   status: OrderStatus;
-  is_read: boolean; // للتأكد من وجود خاصية is_read
+  is_read: boolean;
+  quantity: number; // <--- الحقل المطلوب مضاف هنا
 }

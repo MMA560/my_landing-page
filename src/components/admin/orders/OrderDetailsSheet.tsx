@@ -1,3 +1,5 @@
+// src/components/admin/OrderDetailsSheet.tsx
+
 import OrderDetails from "@/components/admin/OrderDetails"; // تم استيراد OrderDetails فقط
 import { Order } from "@/types/order"; // تم استيراد Order من ملف الأنواع الصحيح الخاص بها
 import {

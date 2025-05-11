@@ -1,6 +1,6 @@
 // src/components/admin/orders/OrdersTable.tsx
 
-import { useState } from "react"; // نحتاج useState فقط للحالة الداخلية مثل updatingStatus
+import { useState } from "react";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
 import {
@@ -33,34 +33,30 @@ import {
 import { Order, OrderStatus, orderStatusArabic, orderStatusColors } from "@/types/order";
 
 interface OrdersTableProps {
-  orders: Order[]; // بيانات الطلبات المفلترة التي تم تمريرها من المكون الأب
-  isLoading: boolean; // حالة التحميل التي تم تمريرها من المكون الأب
-  onViewDetails: (order: Order) => void; // دالة لعرض التفاصيل يتم تمريرها من المكون الأب
+  orders: Order[];
+  isLoading: boolean;
+  onViewDetails: (order: Order) => void;
   onEdit: (order: Order) => void; // دالة للتعديل يتم تمريرها من المكون الأب (إذا كان هناك زر تعديل مباشر هنا)
-  onDeleteConfirm: (order: Order) => void; // دالة لفتح تأكيد الحذف في المكون الأب
-  onStatusChange: (orderId: number, newStatus: OrderStatus) => Promise<void>; // دالة لتغيير حالة الطلب يتم تمريرها من المكون الأب (تمت إضافة Promise<void> لتوضيح أنها تعيد وعداً)
-  onMarkAsRead: (orderId: number) => Promise<void>; // دالة جديدة لتعليم الطلب كمقروء
+  onDeleteConfirm: (order: Order) => void;
+  onStatusChange: (orderId: number, newStatus: OrderStatus) => Promise<void>;
+  onMarkAsRead: (orderId: number) => Promise<void>;
 }
 
 export function OrdersTable({
   orders,
   isLoading,
   onViewDetails,
-  onEdit,
+  onEdit, // onEdit prop is available if needed for a direct edit button
   onDeleteConfirm,
   onStatusChange,
-  onMarkAsRead, // استقبال الدالة الجديدة
+  onMarkAsRead,
 }: OrdersTableProps) {
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
 
   const handleStatusChangeInternal = async (orderId: number, newStatus: OrderStatus) => {
     try {
       setUpdatingStatus(orderId);
-      
-      // استدعاء دالة تغيير الحالة المُمرَّرة من المكون الأب
       await onStatusChange(orderId, newStatus);
-      
-      // لاحظ: عملية تعليم الطلب كمقروء ستتم في المكون الأب
     } catch (error) {
       console.error("فشل في تحديث حالة الطلب محليًا:", error);
     } finally {
@@ -68,20 +64,15 @@ export function OrdersTable({
     }
   };
 
-  // دالة معدلة للتعامل مع نقر زر عرض التفاصيل
   const handleViewDetailsClick = async (order: Order) => {
     try {
-      // إذا لم يكن الطلب مقروءًا، قم بتعليمه كمقروء أولاً
       if (!order.is_read) {
         await onMarkAsRead(order.order_id);
       }
-      
-      // ثم قم بعرض التفاصيل
       onViewDetails(order);
     } catch (error) {
       console.error("فشل في تعليم الطلب كمقروء عند عرض التفاصيل:", error);
-      // نعرض التفاصيل على أي حال حتى لو فشلت عملية تعليم الطلب كمقروء
-      onViewDetails(order);
+      onViewDetails(order); // نعرض التفاصيل على أي حال
     }
   };
 
@@ -118,6 +109,7 @@ export function OrdersTable({
                   <TableHead>المدينة</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>التكلفة</TableHead>
+                  <TableHead>عدد القطع</TableHead> {/* <---  العمود الجديد  ---> */}
                   <TableHead>تاريخ الإنشاء</TableHead>
                   <TableHead>إجراءات</TableHead>
                 </TableRow>
@@ -125,7 +117,7 @@ export function OrdersTable({
               <TableBody>
                 {orders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center h-24">
+                    <TableCell colSpan={9} className="text-center h-24"> {/* <--- تعديل colSpan إلى 9 ---> */}
                       {isLoading ? "جاري تحميل البيانات..." : "لا توجد طلبات"}
                     </TableCell>
                   </TableRow>
@@ -133,7 +125,6 @@ export function OrdersTable({
                   orders.map((order) => (
                     <TableRow
                       key={order.order_id}
-                      // تحديد لون الصف بناءً على حالة is_read
                       className={order.is_read ? "" : "bg-green-50/20"}
                     >
                       <TableCell className="font-medium">#{order.order_id}</TableCell>
@@ -164,7 +155,6 @@ export function OrdersTable({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {/* تحديد خيارات تغيير حالة الطلب */}
                             <DropdownMenuItem
                               onClick={() => handleStatusChangeInternal(order.order_id, "pending")}
                               disabled={order.status === "pending" || updatingStatus !== null}
@@ -200,6 +190,7 @@ export function OrdersTable({
                         </DropdownMenu>
                       </TableCell>
                       <TableCell>{formatCurrency(order.total_cost)}</TableCell>
+                      <TableCell>{order.quantity}</TableCell> {/* <--- عرض عدد القطع ---> */}
                       <TableCell>{formatDate(order.created_at)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
