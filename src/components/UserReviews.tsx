@@ -1,7 +1,7 @@
 // src/components/UserReviews.tsx
 
 import { useEffect, useState } from "react";
-import { Star, ChevronDown, ChevronUp } from "lucide-react"; // تم إضافة ChevronDown و ChevronUp
+import { Star, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -19,6 +19,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { UserReview, BackendReview } from "@/types/review";
 
+// It's good practice to pass product_id as a prop if this component is reusable
+// For now, we'll assume it's for product_id 1 as per the mutation type hint.
+// export const UserReviews = ({ productId }: { productId: number }) => {
 export const UserReviews = () => {
   const [displayReviews, setDisplayReviews] = useState<UserReview[]>([]);
   const [sortBy, setSortBy] = useState<string>("recent");
@@ -26,8 +29,8 @@ export const UserReviews = () => {
     name: "",
     rating: 5,
     comment: "",
+    product_id: 1, // Initialize with a default product_id, e.g., 1
   });
-  // حالة جديدة للتحكم في عرض جميع المراجعات
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const { toast } = useToast();
@@ -39,7 +42,7 @@ export const UserReviews = () => {
     isError,
   } = useQuery<BackendReview[], Error>({
     queryKey: ["reviews"],
-    queryFn: api.getAllReviews,
+    queryFn: api.getAllReviews, // Assuming this fetches reviews for all products or a specific one
   });
 
   useEffect(() => {
@@ -54,6 +57,7 @@ export const UserReviews = () => {
         }),
         rating: backendReview.rate,
         comment: backendReview.comment,
+        product_id: backendReview.product_id, // SOLUTION 1: Add product_id here
       }));
 
       const sorted = [...mappedReviews];
@@ -76,11 +80,12 @@ export const UserReviews = () => {
       : 0;
 
   const createReviewMutation = useMutation({
-    mutationFn: (reviewData: { reviewer_name: string; rate: number; comment: string }) =>
+    mutationFn: (reviewData: { reviewer_name: string; rate: number; comment: string; product_id : number }) =>
       api.createReview(reviewData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
-      setNewReview({ name: "", rating: 5, comment: "" });
+      // Reset the form after successful submission, keeping product_id if it's static
+      setNewReview({ name: "", rating: 5, comment: "", product_id: newReview.product_id });
       toast({
         title: "تم إرسال التقييم بنجاح",
         description: "شكراً لمشاركتك تجربتك!",
@@ -126,6 +131,7 @@ export const UserReviews = () => {
       reviewer_name: newReview.name,
       rate: newReview.rating,
       comment: newReview.comment,
+      product_id: newReview.product_id, // SOLUTION 2: Pass product_id from state
     });
   };
 
@@ -152,7 +158,6 @@ export const UserReviews = () => {
     return <div className="text-center p-8 text-red-500">حدث خطأ أثناء جلب التقييمات.</div>;
   }
 
-  // تحديد عدد المراجعات التي سيتم عرضها بناءً على حالة showAllReviews
   const reviewsToDisplay = showAllReviews ? displayReviews : displayReviews.slice(0, 3);
 
   return (
@@ -190,7 +195,7 @@ export const UserReviews = () => {
               لا توجد تقييمات حتى الآن. كن أول من يقيّم!
             </div>
           ) : (
-            reviewsToDisplay.map((review) => ( // استخدام reviewsToDisplay هنا
+            reviewsToDisplay.map((review) => (
               <div
                 key={review.id}
                 className="p-4 rounded-lg bg-secondary/50 border border-border"
@@ -210,7 +215,6 @@ export const UserReviews = () => {
           )}
         </div>
 
-        {/* زر عرض المزيد / عرض أقل */}
         {displayReviews.length > 3 && (
           <Button
             variant="outline"
@@ -266,9 +270,8 @@ export const UserReviews = () => {
                     value={rating.toString()}
                     id={`rating-${rating}`}
                   />
-                  {/* تعديل: إضافة الرقم بجانب النجمة */}
                   <Label htmlFor={`rating-${rating}`} className="flex items-center gap-1">
-                    <span className="text-xs">{rating}</span> {/* الرقم بجانب النجمة */}
+                    <span className="text-xs">{rating}</span>
                     <Star
                       className={`w-4 h-4 ${
                         rating <= newReview.rating ? "fill-gold text-gold" : ""

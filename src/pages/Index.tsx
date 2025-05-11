@@ -18,6 +18,7 @@ import { Tag } from "lucide-react";
 
 const Index = () => {
   const productData = {
+    product_id: 1,
     name: "كوتشي NIKE SV5",
     nameEn: "NIKE SV5",
     label: "كفاءة وأناقة",
