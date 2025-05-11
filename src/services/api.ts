@@ -1,6 +1,9 @@
+// src/services/api.ts
 import axios from "axios";
-import { Order, OrderStatus } from "@/types/order";
-import { BASE_URL } from "@/config/Config";
+import { Order, OrderStatus } from "@/types/order"; // تأكد من وجود هذا الملف ومساره الصحيح
+import { BackendReview } from "@/types/review"; // استيراد واجهة BackendReview الجديدة
+import { BASE_URL } from "@/config/Config"; // تأكد من وجود هذا الملف ومساره الصحيح
+
 // تهيئة عميل Axios مع الـ BASE_URL
 const apiService = axios.create({
   baseURL: BASE_URL,
@@ -10,6 +13,7 @@ const apiService = axios.create({
     // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
   },
 });
+
 export const api = {
   /**
    * يجلب جميع الطلبات من الواجهة الخلفية.
@@ -103,5 +107,36 @@ export const api = {
       console.error(`فشل في تعليم الطلب رقم ${orderId} كمقروء:`, error);
       throw error;
     }
-  }
+  },
+
+  // --- دوال API الجديدة للمراجعات ---
+  /**
+   * يجلب جميع المراجعات من الواجهة الخلفية.
+   * @returns Promise<BackendReview[]>
+   */
+  getAllReviews: async (): Promise<BackendReview[]> => {
+    try {
+      const response = await apiService.get<BackendReview[]>("/order-app/api/v1/reviews/");
+      return response.data;
+    } catch (error) {
+      console.error("فشل في جلب المراجعات:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * ينشئ مراجعة جديدة.
+   * @param reviewData بيانات المراجعة الجديدة.
+   * @returns Promise<BackendReview>
+   */
+  createReview: async (reviewData: { reviewer_name: string; rate: number; comment: string }): Promise<BackendReview> => {
+    try {
+      const response = await apiService.post<BackendReview>("/order-app/api/v1/reviews/", reviewData);
+      return response.data;
+    } catch (error) {
+      console.error("فشل في إنشاء المراجعة:", error);
+      throw error;
+    }
+  },
+  // --- نهاية دوال API المراجعات ---
 };

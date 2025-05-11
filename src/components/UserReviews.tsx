@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Star } from "lucide-react";
+// src/components/UserReviews.tsx
+
+import { useEffect, useState } from "react";
+import { Star, ChevronDown, ChevronUp } from "lucide-react"; // تم إضافة ChevronDown و ChevronUp
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -13,59 +14,92 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface UserReview {
-  id: number;
-  name: string;
-  date: string;
-  rating: number;
-  comment: string;
-}
-
-const initialReviews: UserReview[] = [
-  {
-    id: 1,
-    name: "أحمد فؤاد",
-    date: "15 مارس 2025",
-    rating: 5,
-    comment:
-      "الكوتشي ده مريح جدًا وشكله شيك أوي. الخامة باينة إنها فخمة، وأحلى كمان من الصور. كل اللي شافه قالي عليه جامد!",
-  },
-  {
-    id: 2,
-    name: "نورا عبد الرحمن",
-    date: "28 فبراير 2025",
-    rating: 4,
-    comment:
-      "الجلد نضيف والمقاس طالع مظبوط. طلبت مقاسي العادي وطلع تمام. بس خدت شوية وقت على ما أخد على رجلي، عشان كده مدّيته ٤ نجوم.",
-  },
-  {
-    id: 3,
-    name: "كريم مجدي",
-    date: "2 إبريل 2025",
-    rating: 5,
-    comment:
-      "خامة محترمة وتفاصيل دقيقة. بصراحة يستاهل كل جنيه، مريح جدًا وبيلبِق على لبس خروجات وكمان فورمال.",
-  }
-];
+import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/services/api";
+import { UserReview, BackendReview } from "@/types/review";
 
 export const UserReviews = () => {
-  const [reviews, setReviews] = useState<UserReview[]>(initialReviews);
+  const [displayReviews, setDisplayReviews] = useState<UserReview[]>([]);
   const [sortBy, setSortBy] = useState<string>("recent");
   const [newReview, setNewReview] = useState({
     name: "",
     rating: 5,
     comment: "",
   });
-  const [reviewSubmitted, setReviewSubmitted] = useState(false); // Track if a review has been submitted
+  // حالة جديدة للتحكم في عرض جميع المراجعات
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const {
+    data: fetchedBackendReviews = [],
+    isLoading,
+    isError,
+  } = useQuery<BackendReview[], Error>({
+    queryKey: ["reviews"],
+    queryFn: api.getAllReviews,
+  });
+
+  useEffect(() => {
+    if (fetchedBackendReviews.length > 0) {
+      const mappedReviews: UserReview[] = fetchedBackendReviews.map((backendReview) => ({
+        id: backendReview.review_id,
+        name: backendReview.reviewer_name,
+        date: new Date(backendReview.created_at).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        }),
+        rating: backendReview.rate,
+        comment: backendReview.comment,
+      }));
+
+      const sorted = [...mappedReviews];
+      if (sortBy === "highest") {
+        sorted.sort((a, b) => b.rating - a.rating);
+      } else if (sortBy === "lowest") {
+        sorted.sort((a, b) => a.rating - b.rating);
+      } else {
+        sorted.sort((a, b) => b.id - a.id);
+      }
+      setDisplayReviews(sorted);
+    } else {
+      setDisplayReviews([]);
+    }
+  }, [fetchedBackendReviews, sortBy]);
 
   const averageRating =
-    reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
+    displayReviews.length > 0
+      ? displayReviews.reduce((acc, review) => acc + review.rating, 0) / displayReviews.length
+      : 0;
+
+  const createReviewMutation = useMutation({
+    mutationFn: (reviewData: { reviewer_name: string; rate: number; comment: string }) =>
+      api.createReview(reviewData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reviews"] });
+      setNewReview({ name: "", rating: 5, comment: "" });
+      toast({
+        title: "تم إرسال التقييم بنجاح",
+        description: "شكراً لمشاركتك تجربتك!",
+      });
+    },
+    onError: (error) => {
+      console.error("خطأ في إرسال التقييم:", error);
+      toast({
+        title: "حدث خطأ",
+        description: "لم يتم إرسال التقييم، يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSortChange = (value: string) => {
     setSortBy(value);
 
-    const sortedReviews = [...reviews];
+    const sortedReviews = [...displayReviews];
     if (value === "highest") {
       sortedReviews.sort((a, b) => b.rating - a.rating);
     } else if (value === "lowest") {
@@ -73,8 +107,7 @@ export const UserReviews = () => {
     } else {
       sortedReviews.sort((a, b) => b.id - a.id);
     }
-
-    setReviews(sortedReviews);
+    setDisplayReviews(sortedReviews);
   };
 
   const handleSubmitReview = (e: React.FormEvent) => {
@@ -82,35 +115,17 @@ export const UserReviews = () => {
 
     if (!newReview.name.trim() || !newReview.comment.trim()) {
       toast({
-        title: "Missing Information",
-        description: "Please enter your name and comment",
+        title: "معلومات ناقصة",
+        description: "الرجاء إدخال اسمك وتعليقك.",
         variant: "destructive",
       });
       return;
     }
 
-    const currentDate = new Date();
-    const formattedDate = currentDate.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-
-    const newReviewObject: UserReview = {
-      id: reviews.length + 1,
-      name: newReview.name,
-      date: formattedDate,
-      rating: newReview.rating,
+    createReviewMutation.mutate({
+      reviewer_name: newReview.name,
+      rate: newReview.rating,
       comment: newReview.comment,
-    };
-
-    setReviews([newReviewObject, ...reviews]);
-    setNewReview({ name: "", rating: 5, comment: "" });
-    setReviewSubmitted(true); // Mark review as submitted
-
-    toast({
-      title: "Review Submitted",
-      description: "Thank you for your feedback!",
     });
   };
 
@@ -129,39 +144,53 @@ export const UserReviews = () => {
     );
   };
 
+  if (isLoading) {
+    return <div className="text-center p-8">جاري تحميل التقييمات...</div>;
+  }
+
+  if (isError) {
+    return <div className="text-center p-8 text-red-500">حدث خطأ أثناء جلب التقييمات.</div>;
+  }
+
+  // تحديد عدد المراجعات التي سيتم عرضها بناءً على حالة showAllReviews
+  const reviewsToDisplay = showAllReviews ? displayReviews : displayReviews.slice(0, 3);
+
   return (
     <div className="space-y-6" dir="rtl">
-      {/* عرض التقييمات فقط إذا لم يتم إرسال التقييم */}
-      {!reviewSubmitted && (
-        <>
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-serif">تقييمات العملاء</h3>
-            <div className="flex items-center">
-              <StarRating rating={Math.round(averageRating)} />
-              <span className="mr-2 text-sm font-medium">
-                {averageRating.toFixed(1)} ({reviews.length} تقييم)
-              </span>
-            </div>
+      <>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-serif">تقييمات العملاء</h3>
+          <div className="flex items-center">
+            <StarRating rating={Math.round(averageRating)} />
+            <span className="mr-2 text-sm font-medium">
+              {averageRating.toFixed(1)} ({displayReviews.length} تقييم)
+            </span>
           </div>
+        </div>
 
-          <div className="flex justify-between items-center">
-            <h4 className="font-medium">آراء العملاء</h4>
-            <div className="w-32">
-              <Select value={sortBy} onValueChange={handleSortChange}>
-                <SelectTrigger className="h-8">
-                  <SelectValue placeholder="ترتيب حسب" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recent">الأحدث</SelectItem>
-                  <SelectItem value="highest">الأعلى تقييمًا</SelectItem>
-                  <SelectItem value="lowest">الأقل تقييمًا</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="flex justify-between items-center">
+          <h4 className="font-medium">آراء العملاء</h4>
+          <div className="w-32">
+            <Select value={sortBy} onValueChange={handleSortChange}>
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="ترتيب حسب" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">الأحدث</SelectItem>
+                <SelectItem value="highest">الأعلى تقييمًا</SelectItem>
+                <SelectItem value="lowest">الأقل تقييمًا</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </div>
 
-          <div className="space-y-4">
-            {reviews.map((review) => (
+        <div className="space-y-4">
+          {displayReviews.length === 0 ? (
+            <div className="text-center text-muted-foreground p-4 border rounded-lg">
+              لا توجد تقييمات حتى الآن. كن أول من يقيّم!
+            </div>
+          ) : (
+            reviewsToDisplay.map((review) => ( // استخدام reviewsToDisplay هنا
               <div
                 key={review.id}
                 className="p-4 rounded-lg bg-secondary/50 border border-border"
@@ -177,10 +206,29 @@ export const UserReviews = () => {
                 </div>
                 <p className="text-sm">{review.comment}</p>
               </div>
-            ))}
-          </div>
-        </>
-      )}
+            ))
+          )}
+        </div>
+
+        {/* زر عرض المزيد / عرض أقل */}
+        {displayReviews.length > 3 && (
+          <Button
+            variant="outline"
+            className="w-full mt-4 border-foreground text-foreground rounded-md flex items-center justify-center gap-2"
+            onClick={() => setShowAllReviews(!showAllReviews)}
+          >
+            {showAllReviews ? (
+              <>
+                عرض أقل <ChevronUp className="w-4 h-4" />
+              </>
+            ) : (
+              <>
+                عرض المزيد <ChevronDown className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        )}
+      </>
 
       <div className="border-t border-border pt-6 mt-8">
         <h4 className="font-medium mb-4">أضف تقييمك</h4>
@@ -195,6 +243,7 @@ export const UserReviews = () => {
                 setNewReview({ ...newReview, name: e.target.value })
               }
               placeholder="اكتب اسمك"
+              disabled={createReviewMutation.isPending}
             />
           </div>
 
@@ -206,6 +255,7 @@ export const UserReviews = () => {
               onValueChange={(val) =>
                 setNewReview({ ...newReview, rating: parseInt(val) })
               }
+              disabled={createReviewMutation.isPending}
             >
               {[1, 2, 3, 4, 5].map((rating) => (
                 <div
@@ -216,7 +266,9 @@ export const UserReviews = () => {
                     value={rating.toString()}
                     id={`rating-${rating}`}
                   />
-                  <Label htmlFor={`rating-${rating}`} className="flex">
+                  {/* تعديل: إضافة الرقم بجانب النجمة */}
+                  <Label htmlFor={`rating-${rating}`} className="flex items-center gap-1">
+                    <span className="text-xs">{rating}</span> {/* الرقم بجانب النجمة */}
                     <Star
                       className={`w-4 h-4 ${
                         rating <= newReview.rating ? "fill-gold text-gold" : ""
@@ -239,11 +291,16 @@ export const UserReviews = () => {
               }
               placeholder="شاركنا تجربتك مع هذا المنتج"
               rows={4}
+              disabled={createReviewMutation.isPending}
             />
           </div>
 
-          <Button type="submit" className="bg-gold hover:bg-gold/90 text-white">
-            إرسال التقييم
+          <Button
+            type="submit"
+            className="bg-gold hover:bg-gold/90 text-white"
+            disabled={createReviewMutation.isPending}
+          >
+            {createReviewMutation.isPending ? "جاري الإرسال..." : "إرسال التقييم"}
           </Button>
         </form>
       </div>

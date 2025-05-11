@@ -326,7 +326,7 @@ export default function OrderDetails({ order, onSaveSuccess }: OrderDetailsProps
             <RenderField label="المحافظة" name="state" value={formState.state} />
             <RenderField label="المدينة" name="city" value={formState.city} />
           </div>
-          <RenderField label="العنوان التفصيلي" name="address" value={formState.address} type="textarea" />
+          <RenderField label="العنوان التفصيلي" name="address" value={formState.address} type="text" />
         </div>
       </div>
 
