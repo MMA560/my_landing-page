@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useParams } from "react-router-dom"; // تم استيراد useParams
 import { Header } from "@/components/Header";
 import { Gallery } from "@/components/Gallery";
 import { ProductOptions } from "@/components/ProductOptions";
@@ -19,9 +20,14 @@ import { Tag } from "lucide-react";
 // لا نحتاج لـ `api` حاليًا للـ Mock Data
 // import { api } from "@/services/api";
 import { ProductOut } from "@/types/product";
-import { MOCK_PRODUCT_DATA } from "@/data/mocProduct";// استيراد بيانات المنتج الوهمية
+import { MOCK_PRODUCT_DATA } from "@/data/mockProduct"; // تم تصحيح مسار الاستيراد
 
 const Index = () => {
+  const { productId } = useParams<{ productId: string }>(); // استخراج productId من الـ URL
+  // يمكنك استخدام productId هنا لجلب بيانات المنتج من الباك إند عندما يكون جاهزًا.
+  // حاليًا، سنستمر في استخدام بيانات الـ Mock.
+  console.log("Product ID from URL:", productId); // للاختبار والتأكد من قراءة الـ ID
+
   const [product, setProduct] = useState<ProductOut | null>(MOCK_PRODUCT_DATA); // استخدم الـ Mock Data مباشرة
   // لم نعد بحاجة لـ Loading و Error
   // const [loading, setLoading] = useState(true);
@@ -95,7 +101,12 @@ const Index = () => {
   // استخدام البيانات من كائن المنتج (الـ Mock Data الآن)
   const displayPrice = product.price;
   const displayOldPrice = product.oldPrice || (product.price * 1.11).toFixed(2);
-  const displayDiscount = (product.oldPrice / product.price *10).toFixed(0) || 11;
+
+  // تصحيح حساب نسبة الخصم
+  const displayDiscount = product.oldPrice && product.price && product.oldPrice > product.price
+    ? Math.floor(((product.oldPrice - product.price) / product.oldPrice) * 100)
+    : product.discount || 0; // إذا لم يكن هناك oldPrice أو لم يكن أكبر من price، استخدم discount الموجود أو صفر
+
   const displayTags = product.tags || [
     { name: "رجالي", id: "men" },
     { name: "مناسب للمهام اليومية", id: "daily" },

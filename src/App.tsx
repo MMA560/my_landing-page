@@ -2,7 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // تم استيراد Navigate
+
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ThankYou from "./pages/ThankYou";
@@ -23,7 +24,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          {/* إعادة توجيه من المسار الأساسي إلى صفحة المنتج (مع الـ ID الوهمي 1) */}
+          <Route path="/" element={<Navigate to="/products/1" replace />} />
+
+          {/* مسار صفحة المنتج الجديد */}
+          <Route path="/products/:productId" element={<Index />} />
+
           <Route path="/thank-you" element={<ThankYou />} />
           <Route path="/policies" element = {<Policies />} />
           <Route path="/about-us" element = {<AboutUs />} />
