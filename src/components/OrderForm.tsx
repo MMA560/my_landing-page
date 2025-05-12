@@ -321,6 +321,15 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             value={totalWithShipping.toFixed(2)}
           />
         </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <p className="m-0">بتقديم الطلب انت توافق علي</p>
+          <a
+            href="/policies"
+            className="underline hover:text-foreground transition-colors"
+          >
+            سياسات الشحن والاستبدال والاسترجاع
+          </a>
+        </div>
 
         <Button
           type="submit"

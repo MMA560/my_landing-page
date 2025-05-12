@@ -47,8 +47,7 @@ export const Footer = () => {
             &copy; {new Date().getFullYear()} Rush Kicks. All rights reserved.
           </p>
           <div className="flex space-x-4 mt-4 sm:mt-0">
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Privacy Policy</a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Terms of Service</a>
+            <a href="/policies" className="text-muted-foreground hover:text-foreground transition-colors text-sm">سياسات الشحن والاستبدال والاسترجاع</a>
           </div>
         </div>
       </div>
