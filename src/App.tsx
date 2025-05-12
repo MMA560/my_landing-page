@@ -10,6 +10,9 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
 import OrdersManagement from "./pages/admin/OrdersManagement";
 import { Policies } from "./pages/Policies";
+import { AboutUs } from "./pages/AboutUs";
+import { SizingGuide } from "./pages/SizingGuide";
+import { CareInstructions } from "./pages/CareInstructions";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +26,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/thank-you" element={<ThankYou />} />
           <Route path="/policies" element = {<Policies />} />
+          <Route path="/about-us" element = {<AboutUs />} />
+          <Route path="/sizing-guide" element = {<SizingGuide />} />
+          <Route path="/care-instructions" element = {<CareInstructions />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<OrdersManagement />} />

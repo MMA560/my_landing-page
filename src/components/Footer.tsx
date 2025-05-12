@@ -17,10 +17,10 @@ export const Footer = () => {
           <div>
             <h4 className="font-medium mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">About Us</a></li>
+              <li><a href="/about-us" className="text-muted-foreground hover:text-foreground transition-colors">About Us</a></li>
               <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Collections</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Sizing Guide</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-foreground transition-colors">Care Instructions</a></li>
+              <li><a href="/sizing-guide" className="text-muted-foreground hover:text-foreground transition-colors">Sizing Guide</a></li>
+              <li><a href="/care-instructions" className="text-muted-foreground hover:text-foreground transition-colors">Care Instructions</a></li>
             </ul>
           </div>
           
