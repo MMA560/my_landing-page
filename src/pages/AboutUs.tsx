@@ -142,7 +142,8 @@ export const AboutUs = () => {
             <Button
               size="lg"
               className="bg-gold hover:bg-gold/90 text-white text-lg"
-              // تم إزالة onClick={() => window.location.href = "/collections"}
+              
+              onClick={() => window.location.href = "/"}
             >
               تسوق الآن
             </Button>

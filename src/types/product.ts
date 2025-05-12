@@ -42,6 +42,9 @@ export type FrontendFAQItem = {
     answer: string;
 };
 
+// NEW: Type for inventory, mapping color -> size -> quantity
+export type FrontendProductInventory = Record<string, Record<string, number>>;
+
 export interface ProductOut {
     id: number;
     name: string;
@@ -55,11 +58,14 @@ export interface ProductOut {
     detailsSections: FrontendProductDetailSection[];
     highlights: FrontendProductHighlightItem[];
     videoInfo?: FrontendProductVideoData;
-    faqs: FrontendFAQItem[]; // <-- الحقل الجديد
+    faqs: FrontendFAQItem[];
 
     oldPrice?: number;
     discount?: number;
     tags?: { name: string; id: string }[];
     nameEn?: string;
     label?: string;
+
+    // NEW: Inventory field
+    inventory: FrontendProductInventory;
 }

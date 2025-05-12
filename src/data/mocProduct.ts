@@ -35,7 +35,7 @@ export const MOCK_PRODUCT_DATA: ProductOut = {
             { src: "https://i.imgur.com/0isafsF.png", alt: "شوز أسود - جانب" },
             { src: "https://i.imgur.com/qsHKkR3.png", alt: "شوز أسود مطعم بيج - جانب" },
             { src: "https://i.imgur.com/WbdKmPn.png", alt: "شوز أزرق مطعم بيج - جانب" },
-            
+
         ],
         "black-tan-beige": [
             { src: "https://i.imgur.com/qsHKkR3.png", alt: "شوز أسود مطعم بيج - جانب" },
@@ -103,7 +103,7 @@ export const MOCK_PRODUCT_DATA: ProductOut = {
             "معايير تصميم عالية",
         ],
     },
-    faqs: [ // البيانات التي طلبت إضافتها للـ FAQ
+    faqs: [
         {
             question: "ما المقاسات المتوفرة؟",
             answer: "كوتشي Nike SV5 متوفر بالمقاسات من 41 حتى 45، بتلبيس مظبوط يريحك من أول مرة. لو كنت بين مقاسين، بننصح تختار المقاس الأكبر لضمان راحة أكبر.",
@@ -120,5 +120,29 @@ export const MOCK_PRODUCT_DATA: ProductOut = {
             question: "الشحن بيستغرق قد إيه وبتكلفة كام؟",
             answer: "مدة التوصيل بتكون من 2 إلى 4 أيام عمل حسب موقعك، وتكلفة الشحن بتُحسب عند تأكيد الطلب بناءً على المحافظة.",
         }
-    ]
+    ],
+    // NEW: Inventory data
+    inventory: {
+        "black": {
+            "41": 5,
+            "42": 8,
+            "43": 0, // Out of stock for black 43
+            "44": 12,
+            "45": 3,
+        },
+        "black-tan-beige": {
+            "41": 10,
+            "42": 6,
+            "43": 7,
+            "44": 0, // Out of stock for black-tan-beige 44
+            "45": 4,
+        },
+        "blue-tan-beige": {
+            "41": 15,
+            "42": 10,
+            "43": 9,
+            "44": 11,
+            "45": 5,
+        },
+    }
 };

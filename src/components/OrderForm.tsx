@@ -6,22 +6,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config/Config";
-import { RefreshCcwDot } from "lucide-react"; // تم إضافة هذا الاستيراد
+import { RefreshCcwDot } from "lucide-react";
+import { FrontendProductInventory } from "@/types/product"; // Import FrontendProductInventory
 
 type OrderFormProps = {
   productName: string;
+  productId: number; // Added productId
+  unitPrice: number; // Added unitPrice
   selectedSize: string | null;
   selectedColor: string | null;
   quantity: number;
   setQuantity: React.Dispatch<React.SetStateAction<number>>;
+  availableStock: number; // Added availableStock prop
+  inventory: FrontendProductInventory; // Pass inventory here for internal checks or future use
 };
 
 export const OrderForm: React.FC<OrderFormProps> = ({
   productName,
+  productId, // Destructure productId
+  unitPrice, // Destructure unitPrice
   selectedSize,
   selectedColor,
   quantity,
   setQuantity,
+  availableStock, // Destructure availableStock
+  inventory, // Destructure inventory
 }) => {
   const { toast } = useToast();
   const form = useRef<HTMLFormElement>(null);
@@ -48,13 +57,32 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
-    if (value > 0) {
-      setQuantity(value);
+    if (value >= 1) {
+      if (value > availableStock) {
+        toast({
+          title: "كمية غير متاحة",
+          description: `لا يمكنك طلب أكثر من ${availableStock} قطعة لهذا المقاس واللون.`,
+          variant: "destructive",
+        });
+        setQuantity(availableStock > 0 ? availableStock : 1); // Cap at available stock or set to 1 if 0
+      } else {
+        setQuantity(value);
+      }
+    } else if (value === 0) {
+      setQuantity(1); // Prevent quantity from being 0
     }
   };
 
   const handleIncrement = () => {
-    setQuantity((prev) => prev + 1);
+    if (quantity < availableStock) { // Only increment if stock allows
+      setQuantity((prev) => prev + 1);
+    } else {
+      toast({
+        title: "كمية غير متاحة",
+        description: `وصلت للحد الأقصى المتاح من المخزون: ${availableStock} قطعة.`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDecrement = () => {
@@ -75,10 +103,22 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       return;
     }
 
+    // --- STOCK CHECK ON SUBMISSION (CRUCIAL) ---
+    if (availableStock === 0 || quantity > availableStock) {
+      toast({
+        title: "عذراً، المنتج غير متاح حالياً",
+        description: "الكمية المطلوبة غير متوفرة لهذا المقاس واللون. يرجى مراجعة الخيارات المتاحة.",
+        variant: "destructive",
+      });
+      setSubmitting(false); // Ensure button is not stuck
+      return;
+    }
+    // --- END STOCK CHECK ---
+
     setSubmitting(true);
 
     if (form.current) {
-      const customerName = formData.name || "عميلنا العزيز"; // تأكد أن name="customer_name" موجود في الفورم
+      const customerName = formData.name || "عميلنا العزيز";
 
       try {
         const response = await fetch(
@@ -96,10 +136,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               city: formData.city,
               state: formData.governate,
               notes: formData.notes,
-              product: productName,
+              product: productName, // This is the name, not the ID
+              product_id: productId, // Send productId
               color: selectedColor,
               size: selectedSize,
-              shipping: 50,
+              shipping: shippingCost, // Use shippingCost constant
               total_cost: totalWithShipping,
               quantity: quantity,
             }),
@@ -112,16 +153,31 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
           });
 
+          // In a real application, the backend would handle stock deduction.
+          // For this mock setup, if you want to simulate, you'd update the local mock product data
+          // This part is commented out as it's client-side and won't persist
+          /*
+          setProduct(prevProduct => {
+            if (prevProduct && prevProduct.inventory[selectedColor] && prevProduct.inventory[selectedColor][selectedSize]) {
+              const newInventory = { ...prevProduct.inventory };
+              newInventory[selectedColor] = { ...newInventory[selectedColor] };
+              newInventory[selectedColor][selectedSize] -= quantity;
+              return { ...prevProduct, inventory: newInventory };
+            }
+            return prevProduct;
+          });
+          */
+
           navigate("/thank-you", {
             state: {
               customerName: customerName,
             },
           });
         } else {
+          const errorData = await response.json(); // Try to parse error message from backend
           toast({
             title: "حدث خطأ أثناء إرسال الطلب",
-            description:
-              "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
+            description: errorData.detail || errorData.message || "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
             variant: "destructive",
           });
         }
@@ -139,9 +195,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   console.log(formData);
 
-  const unitPrice = 490.0; // سعر الوحدة
-  const totalPrice = unitPrice * quantity; // حساب المجموع بناءً على الكمية
-  const totalWithShipping = totalPrice + shippingCost; // المجموع الكلي مع الشحن
+  const totalPrice = unitPrice * quantity; // Use the actual unitPrice
+  const totalWithShipping = totalPrice + shippingCost;
 
   return (
     <form
@@ -247,6 +302,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               onClick={handleDecrement}
               type="button"
               className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground transition-all duration-200"
+              disabled={quantity <= 1} // Disable if quantity is 1 or less
             >
               -
             </Button>
@@ -258,12 +314,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               value={quantity}
               onChange={handleQuantityChange}
               className="w-24 text-center border-none"
-              disabled
+              disabled={availableStock === 0} // Disable input if no stock
             />
             <Button
               onClick={handleIncrement}
               type="button"
               className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground transition-all duration-200"
+              disabled={quantity >= availableStock} // Disable if quantity reaches available stock
             >
               +
             </Button>
@@ -297,12 +354,18 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               <span>تكلفة الشحن:</span>
               <span className="font-medium">{shippingCost} جنيه</span>
             </li>
-            <li className="flex justify-between">
+            <li className="flex justify-between font-bold text-lg">
               <span>المجموع الكلي:</span>
               <span className="font-medium">{totalWithShipping} جنيه</span>
             </li>
+            <li className="flex justify-between">
+              <span>سعر الوحدة:</span>
+              <span className="font-medium">{unitPrice.toFixed(2)} جنيه</span>
+            </li>
           </ul>
+          {/* Add hidden inputs for backend */}
           <Input type="hidden" name="product_name" value={productName} />
+          <Input type="hidden" name="product_id" value={productId} />
           <Input
             type="hidden"
             name="selected_size"
@@ -334,15 +397,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         <Button
           type="submit"
           className="w-full mt-4 bg-gold hover:bg-gold/90 text-white"
-          disabled={submitting}
+          disabled={submitting || !selectedSize || !selectedColor || quantity <= 0 || availableStock === 0 || quantity > availableStock}
         >
           {submitting ? (
             <span className="flex items-center justify-center">
               {" "}
-              {/* إضافة flex container لترتيب العناصر */}
               جاري الإرسال
               <RefreshCcwDot className="animate-spin mr-2" size={18} />{" "}
-              {/* الأيقونة بعد النص مع هامش يمين */}
             </span>
           ) : (
             "تقديم الطلب"

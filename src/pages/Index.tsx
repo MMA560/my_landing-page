@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom"; // تم استيراد useParams
+import { useEffect, useState, useRef, useMemo } from "react"; // Added useMemo
+import { useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Gallery } from "@/components/Gallery";
 import { ProductOptions } from "@/components/ProductOptions";
@@ -16,37 +16,66 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tag } from "lucide-react";
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
-// لا نحتاج لـ `api` حاليًا للـ Mock Data
-// import { api } from "@/services/api";
 import { ProductOut } from "@/types/product";
-import { MOCK_PRODUCT_DATA } from "@/data/mockProduct"; // تم تصحيح مسار الاستيراد
+import { MOCK_PRODUCT_DATA } from "@/data/mocProduct";
 
 const Index = () => {
-  const { productId } = useParams<{ productId: string }>(); // استخراج productId من الـ URL
-  // يمكنك استخدام productId هنا لجلب بيانات المنتج من الباك إند عندما يكون جاهزًا.
-  // حاليًا، سنستمر في استخدام بيانات الـ Mock.
-  console.log("Product ID from URL:", productId); // للاختبار والتأكد من قراءة الـ ID
+  const { productId } = useParams<{ productId: string }>();
+  console.log("Product ID from URL:", productId);
 
-  const [product, setProduct] = useState<ProductOut | null>(MOCK_PRODUCT_DATA); // استخدم الـ Mock Data مباشرة
-  // لم نعد بحاجة لـ Loading و Error
-  // const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null);
-
+  const [product, setProduct] = useState<ProductOut | null>(MOCK_PRODUCT_DATA);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
   const orderFormRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast(); // Initialize useToast
 
   useEffect(() => {
-    // قم بتهيئة اللون الافتراضي من الـ Mock Data
+    // Set default color and size if available in mock data
     if (MOCK_PRODUCT_DATA.availableColors && MOCK_PRODUCT_DATA.availableColors.length > 0) {
       setSelectedColor(MOCK_PRODUCT_DATA.availableColors[0].value);
     }
+    if (MOCK_PRODUCT_DATA.availableSizes && MOCK_PRODUCT_DATA.availableSizes.length > 0) {
+      setSelectedSize(MOCK_PRODUCT_DATA.availableSizes[0].value);
+    }
   }, []);
 
+  // Memoize the current stock for the selected variant
+  const availableStock = useMemo(() => {
+    if (!product || !selectedColor || !selectedSize) {
+      return 0;
+    }
+    return product.inventory[selectedColor]?.[selectedSize] || 0;
+  }, [product, selectedColor, selectedSize]);
+
+  // Check if the selected quantity is available in stock
+  const isQuantityAvailable = useMemo(() => {
+    return quantity <= availableStock;
+  }, [quantity, availableStock]);
+
+  // Determine if the order button should be disabled
+  const isOrderDisabled = useMemo(() => {
+    return !selectedSize || !selectedColor || quantity <= 0 || !isQuantityAvailable;
+  }, [selectedSize, selectedColor, quantity, isQuantityAvailable]);
+
+
   const scrollToOrderForm = () => {
+    if (isOrderDisabled) {
+      toast({
+        title: "خطأ في الطلب",
+        description: !selectedSize || !selectedColor
+          ? "يرجى اختيار المقاس واللون."
+          : !isQuantityAvailable
+            ? `الكمية المطلوبة (${quantity}) غير متوفرة لهذا المقاس واللون. الكمية المتاحة: ${availableStock}.`
+            : "يرجى تحديد الكمية.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (orderFormRef.current) {
       orderFormRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -55,12 +84,34 @@ const Index = () => {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (value >= 1) {
-      setQuantity(value);
+      if (value > availableStock) {
+        toast({
+          title: "كمية غير متاحة",
+          description: `لا يمكنك طلب أكثر من ${availableStock} قطعة لهذا المقاس واللون.`,
+          variant: "destructive",
+        });
+        setQuantity(availableStock > 0 ? availableStock : 1); // Cap at available stock or set to 1 if 0
+      } else {
+        setQuantity(value);
+      }
+    } else if (value === 0) {
+      setQuantity(1); // Prevent quantity from being 0
     }
   };
 
   const increaseQuantity = () => {
-    setQuantity((prevQuantity) => prevQuantity + 1);
+    setQuantity((prevQuantity) => {
+      const newQuantity = prevQuantity + 1;
+      if (newQuantity > availableStock) {
+        toast({
+          title: "كمية غير متاحة",
+          description: `لا يمكنك طلب أكثر من ${availableStock} قطعة لهذا المقاس واللون.`,
+          variant: "destructive",
+        });
+        return prevQuantity; // Do not increase if it exceeds available stock
+      }
+      return newQuantity;
+    });
   };
 
   const decreaseQuantity = () => {
@@ -69,28 +120,7 @@ const Index = () => {
     }
   };
 
-  // لم نعد بحاجة لـ Loading و Error checks
-  // if (loading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-  //       جارٍ تحميل المنتج...
-  //     </div>
-  //   );
-  // }
-
-  // if (error) {
-  //   return (
-  //     <div className="min-h-screen flex flex-col items-center justify-center bg-background text-red-500">
-  //       <p>حدث خطأ: {error}</p>
-  //       <Button onClick={() => window.location.reload()} className="mt-4">
-  //         أعد المحاولة
-  //       </Button>
-  //     </div>
-  //   );
-  // }
-
   if (!product) {
-    // هذا الشرط لن يتحقق إذا كان MOCK_PRODUCT_DATA دائمًا موجودًا
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         المنتج غير موجود.
@@ -98,14 +128,12 @@ const Index = () => {
     );
   }
 
-  // استخدام البيانات من كائن المنتج (الـ Mock Data الآن)
   const displayPrice = product.price;
   const displayOldPrice = product.oldPrice || (product.price * 1.11).toFixed(2);
 
-  // تصحيح حساب نسبة الخصم
   const displayDiscount = product.oldPrice && product.price && product.oldPrice > product.price
     ? Math.floor(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : product.discount || 0; // إذا لم يكن هناك oldPrice أو لم يكن أكبر من price، استخدم discount الموجود أو صفر
+    : product.discount || 0;
 
   const displayTags = product.tags || [
     { name: "رجالي", id: "men" },
@@ -165,9 +193,49 @@ const Index = () => {
                   availableColors={product.availableColors}
                   selectedSize={selectedSize}
                   selectedColor={selectedColor}
-                  onSizeChange={setSelectedSize}
-                  onColorChange={setSelectedColor}
+                  onSizeChange={(size) => {
+                    setSelectedSize(size);
+                    // Reset quantity or adjust if newly selected combination has less stock
+                    const newAvailableStock = product.inventory[selectedColor || '']?.[size] || 0;
+                    if (quantity > newAvailableStock) {
+                      setQuantity(newAvailableStock > 0 ? newAvailableStock : 1);
+                      if (newAvailableStock < quantity) { // Only show toast if quantity actually changed due to stock
+                        toast({
+                          title: "تعديل الكمية",
+                          description: `تم تعديل الكمية لتناسب المخزون المتاح للمقاس الجديد: ${newAvailableStock} قطعة.`,
+                          variant: "default",
+                        });
+                      }
+                    }
+                  }}
+                  onColorChange={(color) => {
+                    setSelectedColor(color);
+                    // Reset quantity or adjust if newly selected combination has less stock
+                    const newAvailableStock = product.inventory[color]?.[selectedSize || ''] || 0;
+                    if (quantity > newAvailableStock) {
+                      setQuantity(newAvailableStock > 0 ? newAvailableStock : 1);
+                      if (newAvailableStock < quantity) { // Only show toast if quantity actually changed due to stock
+                        toast({
+                          title: "تعديل الكمية",
+                          description: `تم تعديل الكمية لتناسب المخزون المتاح للون الجديد: ${newAvailableStock} قطعة.`,
+                          variant: "default",
+                        });
+                      }
+                    }
+                  }}
+                  // Pass availableStock to ProductOptions to disable unavailable options
+                  inventory={product.inventory}
+                  // Pass the selected color to ensure `Gallery` updates correctly
+                  selectedGalleryColor={selectedColor || (product.availableColors[0]?.value || "general")}
                 />
+                {/* Display stock message 
+                {selectedSize && selectedColor && (
+                  <p dir="rtl" className={`mt-2 text-sm ${availableStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {availableStock > 0
+                      ? `المخزون المتاح: ${availableStock} قطعة`
+                      : `هذا المقاس واللون غير متوفرين حاليًا.`}
+                  </p>
+                )}*/}
               </div>
 
               {/* العدد*/}
@@ -182,6 +250,7 @@ const Index = () => {
                   <Button
                     onClick={decreaseQuantity}
                     className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground"
+                    disabled={quantity <= 1 || availableStock === 0} // Disable if quantity is 1 or less, or no stock
                   >
                     -
                   </Button>
@@ -192,11 +261,12 @@ const Index = () => {
                     value={quantity}
                     onChange={handleQuantityChange}
                     className="w-24 text-center border-none"
-                    disabled
+                    disabled={availableStock === 0} // Disable input if no stock
                   />
                   <Button
                     onClick={increaseQuantity}
                     className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground"
+                    disabled={quantity >= availableStock || availableStock === 0} // Disable if quantity reaches available stock or no stock
                   >
                     +
                   </Button>
@@ -207,6 +277,7 @@ const Index = () => {
                 onClick={scrollToOrderForm}
                 className="bg-gold hover:bg-gold/90 text-white"
                 size="lg"
+                disabled={isOrderDisabled} // Disable based on availability
               >
                 اطلب الآن
               </Button>
@@ -249,10 +320,15 @@ const Index = () => {
               <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
                 <OrderForm
                   productName={product.name}
+                  productId={product.id} // Pass productId
+                  unitPrice={product.price} // Pass actual product price
                   selectedSize={selectedSize}
                   selectedColor={selectedColor}
                   quantity={quantity}
                   setQuantity={setQuantity}
+                  availableStock={availableStock} // Pass available stock to form
+                  // Pass inventory to the form for checking stock
+                  inventory={product.inventory}
                 />
               </div>
             </div>
