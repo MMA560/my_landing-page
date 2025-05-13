@@ -19,9 +19,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { UserReview, BackendReview } from "@/types/review";
 
-// It's good practice to pass product_id as a prop if this component is reusable
-// For now, we'll assume it's for product_id 1 as per the mutation type hint.
-// export const UserReviews = ({ productId }: { productId: number }) => {
 export const UserReviews = () => {
   const [displayReviews, setDisplayReviews] = useState<UserReview[]>([]);
   const [sortBy, setSortBy] = useState<string>("recent");
@@ -29,7 +26,7 @@ export const UserReviews = () => {
     name: "",
     rating: 5,
     comment: "",
-    product_id: 1, // Initialize with a default product_id, e.g., 1
+    product_id: 1, // تهيئة مع معرف منتج افتراضي
   });
   const [showAllReviews, setShowAllReviews] = useState(false);
 
@@ -42,10 +39,14 @@ export const UserReviews = () => {
     isError,
   } = useQuery<BackendReview[], Error>({
     queryKey: ["reviews"],
-    queryFn: api.getAllReviews, // Assuming this fetches reviews for all products or a specific one
+    queryFn: api.getAllReviews, // يفترض أن هذا يجلب التقييمات لجميع المنتجات أو منتج معين
+    refetchOnWindowFocus: false, // إضافة هذا لمنع إعادة الجلب التلقائي عند التركيز
+    refetchOnMount: false,      // إضافة هذا لمنع إعادة الجلب التلقائي عند تحميل المكون
+    retry: 1,                   // تحديد عدد مرات إعادة المحاولة في حالة الفشل
   });
 
   useEffect(() => {
+
     if (fetchedBackendReviews.length > 0) {
       const mappedReviews: UserReview[] = fetchedBackendReviews.map((backendReview) => ({
         id: backendReview.review_id,
@@ -57,22 +58,29 @@ export const UserReviews = () => {
         }),
         rating: backendReview.rate,
         comment: backendReview.comment,
-        product_id: backendReview.product_id, // SOLUTION 1: Add product_id here
+        product_id: backendReview.product_id,
       }));
 
-      const sorted = [...mappedReviews];
+      const sorted = [...mappedReviews]; // إنشاء نسخة جديدة للفرز
       if (sortBy === "highest") {
         sorted.sort((a, b) => b.rating - a.rating);
       } else if (sortBy === "lowest") {
         sorted.sort((a, b) => a.rating - b.rating);
       } else {
+        // الفرز الافتراضي: الأحدث (بافتراض أن الـ ID الأكبر يعني الأحدث)
         sorted.sort((a, b) => b.id - a.id);
       }
-      setDisplayReviews(sorted);
+      setDisplayReviews(sorted); // تحديث حالة عرض التقييمات
     } else {
-      setDisplayReviews([]);
+      // هذا الجزء هو الأكثر احتمالاً للتسبب في الحلقة إذا كانت fetchedBackendReviews
+      // دائماً مصفوفة فارغة لكن بمرجع جديد في كل مرة.
+      // نقوم بتحديث displayReviews إلى مصفوفة فارغة فقط إذا لم تكن فارغة بالفعل.
+      if (displayReviews.length !== 0) {
+        setDisplayReviews([]);
+      } else {
+      }
     }
-  }, [fetchedBackendReviews, sortBy]);
+  }, [JSON.stringify(fetchedBackendReviews), sortBy, displayReviews.length]); // <--- هنا التعديل لتشخيص المشكلة
 
   const averageRating =
     displayReviews.length > 0
@@ -80,11 +88,10 @@ export const UserReviews = () => {
       : 0;
 
   const createReviewMutation = useMutation({
-    mutationFn: (reviewData: { reviewer_name: string; rate: number; comment: string; product_id : number }) =>
+    mutationFn: (reviewData: { reviewer_name: string; rate: number; comment: string; product_id: number }) =>
       api.createReview(reviewData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reviews"] });
-      // Reset the form after successful submission, keeping product_id if it's static
       setNewReview({ name: "", rating: 5, comment: "", product_id: newReview.product_id });
       toast({
         title: "تم إرسال التقييم بنجاح",
@@ -103,16 +110,6 @@ export const UserReviews = () => {
 
   const handleSortChange = (value: string) => {
     setSortBy(value);
-
-    const sortedReviews = [...displayReviews];
-    if (value === "highest") {
-      sortedReviews.sort((a, b) => b.rating - a.rating);
-    } else if (value === "lowest") {
-      sortedReviews.sort((a, b) => a.rating - b.rating);
-    } else {
-      sortedReviews.sort((a, b) => b.id - a.id);
-    }
-    setDisplayReviews(sortedReviews);
   };
 
   const handleSubmitReview = (e: React.FormEvent) => {
@@ -131,7 +128,7 @@ export const UserReviews = () => {
       reviewer_name: newReview.name,
       rate: newReview.rating,
       comment: newReview.comment,
-      product_id: newReview.product_id, // SOLUTION 2: Pass product_id from state
+      product_id: newReview.product_id,
     });
   };
 

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,30 +7,33 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config/Config";
 import { RefreshCcwDot } from "lucide-react";
-import { FrontendProductInventory } from "@/types/product"; // Import FrontendProductInventory
+import { FrontendProductInventory } from "@/types/product"; 
+import { api } from "@/services/api"; // Import API for inventory update
 
 type OrderFormProps = {
   productName: string;
-  productId: number; // Added productId
-  unitPrice: number; // Added unitPrice
+  productId: number;
+  unitPrice: number;
   selectedSize: string | null;
   selectedColor: string | null;
   quantity: number;
   setQuantity: React.Dispatch<React.SetStateAction<number>>;
-  availableStock: number; // Added availableStock prop
-  inventory: FrontendProductInventory; // Pass inventory here for internal checks or future use
+  availableStock: number;
+  inventory: FrontendProductInventory;
+  inventoryIds?: Record<string, Record<string, number>>; // Added inventoryIds prop to access product_inventory_id
 };
 
 export const OrderForm: React.FC<OrderFormProps> = ({
   productName,
-  productId, // Destructure productId
-  unitPrice, // Destructure unitPrice
+  productId,
+  unitPrice,
   selectedSize,
   selectedColor,
   quantity,
   setQuantity,
-  availableStock, // Destructure availableStock
-  inventory, // Destructure inventory
+  availableStock,
+  inventory,
+  inventoryIds,
 }) => {
   const { toast } = useToast();
   const form = useRef<HTMLFormElement>(null);
@@ -45,6 +48,19 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   });
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const [currentInventoryItemId, setCurrentInventoryItemId] = useState<number | undefined>(undefined);
+
+  // تحديث معرف العنصر في المخزون عندما يتغير اللون أو المقاس
+  useEffect(() => {
+    if (selectedColor && selectedSize && inventoryIds) {
+      const itemId = inventoryIds[selectedColor]?.[selectedSize];
+      setCurrentInventoryItemId(itemId);
+      console.log(`تم تحديث معرف العنصر في المخزون: ${itemId} للون: ${selectedColor} والمقاس: ${selectedSize}`);
+    } else {
+      setCurrentInventoryItemId(undefined);
+      console.log("لم يتم العثور علي معرفات المتغيرات: ", inventoryIds)
+    }
+  }, [selectedColor, selectedSize, inventoryIds]);
 
   const shippingCost = 50; // تكلفة الشحن
 
@@ -117,10 +133,23 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
     setSubmitting(true);
 
+    // تحقق من وجود معرف العنصر في المخزون
+    if (!currentInventoryItemId) {
+      console.error("لا يمكن العثور على معرف العنصر في المخزون للتركيبة المختارة", { selectedColor, selectedSize });
+      toast({
+        title: "مشكلة في المخزون",
+        description: "لا يمكن العثور على معرف العنصر في المخزون للتركيبة المختارة. يرجى المحاولة لاحقًا.",
+        variant: "destructive",
+      });
+      setSubmitting(false);
+      return;
+    }
+
     if (form.current) {
       const customerName = formData.name || "عميلنا العزيز";
 
       try {
+        // Step 1: Create the order
         const response = await fetch(
           `${BASE_URL}/order-app/api/v1/create-order/?to_email=mo3geza380@gmail.com`,
           {
@@ -136,37 +165,35 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               city: formData.city,
               state: formData.governate,
               notes: formData.notes,
-              product: productName, // This is the name, not the ID
-              product_id: productId, // Send productId
+              product: productName,
+              product_id: productId,
               color: selectedColor,
               size: selectedSize,
-              shipping: shippingCost, // Use shippingCost constant
+              shipping: shippingCost,
               total_cost: totalWithShipping,
               quantity: quantity,
+              inventory_item_id: currentInventoryItemId, // استخدام متغير الحالة الذي تم تحديثه
             }),
           }
         );
 
         if (response.ok) {
+          // Step 2: Update inventory if inventory ID exists
+          console.log("Updating inventory with ID:", currentInventoryItemId, "Quantity:", quantity);
+          try {
+            // Call the API to update inventory quantity
+            await api.updateInventoryItemQuantity(currentInventoryItemId, quantity);
+            console.log(`تم تحديث المخزون بنجاح للعنصر #${currentInventoryItemId} بكمية ${quantity}`);
+          } catch (inventoryError) {
+            // Log the error but don't block order success
+            console.error("فشل في تحديث المخزون:", inventoryError);
+            // Optionally notify admin about inventory update failure
+          }
+
           toast({
             title: "تم تقديم الطلب بنجاح!",
             description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
           });
-
-          // In a real application, the backend would handle stock deduction.
-          // For this mock setup, if you want to simulate, you'd update the local mock product data
-          // This part is commented out as it's client-side and won't persist
-          /*
-          setProduct(prevProduct => {
-            if (prevProduct && prevProduct.inventory[selectedColor] && prevProduct.inventory[selectedColor][selectedSize]) {
-              const newInventory = { ...prevProduct.inventory };
-              newInventory[selectedColor] = { ...newInventory[selectedColor] };
-              newInventory[selectedColor][selectedSize] -= quantity;
-              return { ...prevProduct, inventory: newInventory };
-            }
-            return prevProduct;
-          });
-          */
 
           navigate("/thank-you", {
             state: {
@@ -174,7 +201,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             },
           });
         } else {
-          const errorData = await response.json(); // Try to parse error message from backend
+          const errorData = await response.json();
           toast({
             title: "حدث خطأ أثناء إرسال الطلب",
             description: errorData.detail || errorData.message || "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
@@ -193,9 +220,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     }
   };
 
-  console.log(formData);
-
-  const totalPrice = unitPrice * quantity; // Use the actual unitPrice
+  const totalPrice = unitPrice * quantity;
   const totalWithShipping = totalPrice + shippingCost;
 
   return (
@@ -302,7 +327,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               onClick={handleDecrement}
               type="button"
               className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground transition-all duration-200"
-              disabled={quantity <= 1} // Disable if quantity is 1 or less
+              disabled={quantity <= 1}
             >
               -
             </Button>
@@ -314,13 +339,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               value={quantity}
               onChange={handleQuantityChange}
               className="w-24 text-center border-none"
-              disabled={availableStock === 0} // Disable input if no stock
+              disabled
             />
             <Button
               onClick={handleIncrement}
               type="button"
               className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground transition-all duration-200"
-              disabled={quantity >= availableStock} // Disable if quantity reaches available stock
+              disabled={quantity >= availableStock} 
             >
               +
             </Button>
@@ -383,6 +408,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             name="total_with_shipping"
             value={totalWithShipping.toFixed(2)}
           />
+          {currentInventoryItemId && (
+            <Input 
+              type="hidden" 
+              name="inventory_item_id" 
+              value={currentInventoryItemId} 
+            />
+          )}
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <p className="m-0">بتقديم الطلب انت توافق علي</p>
@@ -397,7 +429,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         <Button
           type="submit"
           className="w-full mt-4 bg-gold hover:bg-gold/90 text-white"
-          disabled={submitting || !selectedSize || !selectedColor || quantity <= 0 || availableStock === 0 || quantity > availableStock}
+          disabled={submitting || !selectedSize || !selectedColor || quantity <= 0 || availableStock === 0 || quantity > availableStock }
         >
           {submitting ? (
             <span className="flex items-center justify-center">
