@@ -25,9 +25,8 @@ import { ProductOut, FrontendProductInventory } from "@/types/product";
 // استيراد React Query
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-// استيراد البيانات الثابتة الأولية للمنتج
-// PRODUCT_DATA في هذه اللحظة يحتوي على المخزون الفارغ {} مبدئياً
-import { PRODUCT_DATA } from "@/data/productData";
+// استيراد البيانات الثابتة الأولية للمنتجات - ملاحظة التغيير من PRODUCT_DATA إلى PRODUCTS_DATA
+import { PRODUCTS_DATA, transformInventoryData } from "@/data/productData";
 
 const Index = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -36,13 +35,27 @@ const Index = () => {
   // إنشاء مثيل QueryClient
   const queryClient = useQueryClient();
 
-  // تهيئة حالة المنتج بالبيانات الثابتة الأولية.
-  const [product, setProduct] = useState<ProductOut | null>(PRODUCT_DATA);
+  // تهيئة حالة المنتج بعد العثور عليه من مصفوفة المنتجات
+  const [product, setProduct] = useState<ProductOut | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const orderFormRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // البحث عن المنتج المطلوب من المصفوفة حسب المعرف
+  useEffect(() => {
+    if (productId) {
+      const foundProduct = PRODUCTS_DATA.find(p => p.id === parseInt(productId));
+      if (foundProduct) {
+        console.log(`Found product with ID ${productId}:`, foundProduct.name);
+        setProduct(foundProduct);
+      } else {
+        console.warn(`Product with ID ${productId} not found.`);
+        setProduct(null);
+      }
+    }
+  }, [productId]);
 
   // استخدام React Query لجلب المخزون مع تحديث تلقائي
   const {
@@ -67,11 +80,10 @@ const Index = () => {
 
   // تحديث حالة المنتج عند استلام بيانات المخزون الجديدة
   useEffect(() => {
-    if (inventoryData) {
+    if (inventoryData && product) {
       setProduct(prevProduct => {
         if (!prevProduct) {
           console.warn("Product state was null while updating inventory.");
-          console.log("Object11: this is objects",inventoryData)
           return null;
         }
         
@@ -82,7 +94,7 @@ const Index = () => {
           inventoryIds: inventoryData.inventoryIds, // تحديث معرفات المخزون
         };
         
-        console.log(`Dynamic inventory data updated for product $${updatedProduct.inventoryIds}$`, inventoryData.inventory);
+        console.log(`Dynamic inventory data updated for product ${updatedProduct.id}`, inventoryData.inventory);
         
         // المقارنة بين المخزون القديم والجديد للتركيبة المحددة
         if (selectedColor && selectedSize) {
