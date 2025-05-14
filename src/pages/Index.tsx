@@ -25,9 +25,6 @@ import { ProductOut, FrontendProductInventory } from "@/types/product";
 // استيراد React Query
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-// استيراد البيانات الثابتة الأولية للمنتجات - ملاحظة التغيير من PRODUCT_DATA إلى PRODUCTS_DATA
-import { PRODUCTS_DATA, transformInventoryData } from "@/data/productData";
-
 const Index = () => {
   const { productId } = useParams<{ productId: string }>();
   console.log("Product ID from URL:", productId);
@@ -35,7 +32,7 @@ const Index = () => {
   // إنشاء مثيل QueryClient
   const queryClient = useQueryClient();
 
-  // تهيئة حالة المنتج بعد العثور عليه من مصفوفة المنتجات
+  // تهيئة حالة المنتج
   const [product, setProduct] = useState<ProductOut | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -43,19 +40,25 @@ const Index = () => {
   const orderFormRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // البحث عن المنتج المطلوب من المصفوفة حسب المعرف
-  useEffect(() => {
-    if (productId) {
-      const foundProduct = PRODUCTS_DATA.find(p => p.id === parseInt(productId));
-      if (foundProduct) {
-        console.log(`Found product with ID ${productId}:`, foundProduct.name);
-        setProduct(foundProduct);
-      } else {
-        console.warn(`Product with ID ${productId} not found.`);
-        setProduct(null);
+  // استخدام React Query لجلب بيانات المنتج
+  const {
+    data: productData,
+    isLoading: isLoadingProduct,
+    isError: isProductError,
+  } = useQuery({
+    queryKey: ["product", productId],
+    queryFn: async () => {
+      if (!productId) {
+        throw new Error("Product ID is missing from URL.");
       }
-    }
-  }, [productId]);
+      const fetchedProduct = await api.getProductById(parseInt(productId));
+      if (!fetchedProduct) {
+        throw new Error(`Product with ID ${productId} not found.`);
+      }
+      return fetchedProduct;
+    },
+    enabled: !!productId, // تعطيل الاستعلام إذا لم يكن هناك معرف منتج
+  });
 
   // استخدام React Query لجلب المخزون مع تحديث تلقائي
   const {
@@ -77,6 +80,14 @@ const Index = () => {
     refetchOnMount: true, // تحديث عند تركيب المكون
     enabled: !!productId, // تعطيل الاستعلام إذا لم يكن هناك معرف منتج
   });
+
+  // تحديث حالة المنتج عند استلام بيانات المنتج من API
+  useEffect(() => {
+    if (productData) {
+      console.log(`Fetched product with ID ${productId}:`, productData.name);
+      setProduct(productData);
+    }
+  }, [productData, productId]);
 
   // تحديث حالة المنتج عند استلام بيانات المخزون الجديدة
   useEffect(() => {
@@ -225,21 +236,30 @@ const Index = () => {
     }
   };
 
-  // التعامل مع حالة عدم تحميل بيانات المنتج الأولية
-  if (!product) {
+  // التعامل مع حالة تحميل أو خطأ في بيانات المنتج
+  if (isLoadingProduct) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        المنتج غير موجود أو جارٍ تحميل بياناته الأولية...
+        جارٍ تحميل بيانات المنتج...
       </div>
     );
   }
 
+  if (isProductError || !product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        تعذر العثور على المنتج أو حدث خطأ أثناء التحميل.
+      </div>
+    );
+  }
+
+  // إعداد بيانات العرض للعميل
   const displayPrice = product.price;
-  const displayOldPrice = product.oldPrice || (product.price * 1.11).toFixed(2);
-  const displayDiscount = product.oldPrice && product.price && product.oldPrice > product.price
+  const displayOldPrice = product.oldPrice || null;
+  const displayDiscount = product.discount || (product.oldPrice && product.price && product.oldPrice > product.price
     ? Math.floor(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : product.discount || 0;
-  const displayTags = product.tags 
+    : 0);
+  const displayTags = product.tags || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -278,9 +298,9 @@ const Index = () => {
                 <span className="text-2xl font-bold">
                   جنيه {displayPrice.toFixed(2)}
                 </span>
-                {displayOldPrice && parseFloat(String(displayOldPrice)) > displayPrice && (
+                {displayOldPrice && displayOldPrice > displayPrice && (
                   <span className="text-sm line-through text-muted-foreground" >
-                    جنيه {parseFloat(String(displayOldPrice)).toFixed(2)}
+                    جنيه {displayOldPrice.toFixed(2)}
                   </span>
                 )}
                 {displayDiscount > 0 && (
