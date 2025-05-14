@@ -437,20 +437,20 @@ export const PRODUCTS_DATA: ProductOut[] = [
     ],
     "galleryImages": {
         "white_kashmir": [
-            { "src": "https://i.imgur.com/8usIX5g.png", "alt": "كوتشي - الصورة الرئيسية" },
+            { "src": "https://i.imgur.com/px4idyr.png", "alt": "كوتشي - الصورة الرئيسية" },
             { "src": "https://i.imgur.com/14796gi.png", "alt": "كوتشي كشمير - جانب" },
             { "src": "https://i.imgur.com/Lml7c7U.png", "alt": "كوتشي أسود - جانب" },
             { "src": "https://i.imgur.com/6WHCAZB.png", "alt": "كوتشي رمادي - جانب" }
         ],
         "white_black": [
             { "src": "https://i.imgur.com/Lml7c7U.png", "alt": "كوتشي أسود - جانب" },
-            { "src": "https://i.imgur.com/8usIX5g.png", "alt": "كوتشي - الصورة الرئيسية" },
+            { "src": "https://i.imgur.com/px4idyr.png", "alt": "كوتشي - الصورة الرئيسية" },
             { "src": "https://i.imgur.com/14796gi.png", "alt": "كوتشي كشمير - جانب" },
             { "src": "https://i.imgur.com/6WHCAZB.png", "alt": "كوتشي رمادي - جانب" }
         ],
         "white_gray": [
             { "src": "https://i.imgur.com/6WHCAZB.png", "alt": "كوتشي رمادي - جانب" },
-            { "src": "https://i.imgur.com/8usIX5g.png", "alt": "كوتشي - الصورة الرئيسية" },
+            { "src": "https://i.imgur.com/px4idyr.png", "alt": "كوتشي - الصورة الرئيسية" },
             { "src": "https://i.imgur.com/14796gi.png", "alt": "كوتشي كشمير - جانب" },
             { "src": "https://i.imgur.com/Lml7c7U.png", "alt": "كوتشي أسود - جانب" }
         ]
