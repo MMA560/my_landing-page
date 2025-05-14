@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config/Config";
 import { RefreshCcwDot } from "lucide-react";
-import { FrontendProductInventory } from "@/types/product"; 
+import { FrontendProductInventory } from "@/types/product";
 import { api } from "@/services/api"; // Import API for inventory update
 
 type OrderFormProps = {
@@ -48,17 +48,21 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   });
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const [currentInventoryItemId, setCurrentInventoryItemId] = useState<number | undefined>(undefined);
+  const [currentInventoryItemId, setCurrentInventoryItemId] = useState<
+    number | undefined
+  >(undefined);
 
   // تحديث معرف العنصر في المخزون عندما يتغير اللون أو المقاس
   useEffect(() => {
     if (selectedColor && selectedSize && inventoryIds) {
       const itemId = inventoryIds[selectedColor]?.[selectedSize];
       setCurrentInventoryItemId(itemId);
-      console.log(`تم تحديث معرف العنصر في المخزون: ${itemId} للون: ${selectedColor} والمقاس: ${selectedSize}`);
+      console.log(
+        `تم تحديث معرف العنصر في المخزون: ${itemId} للون: ${selectedColor} والمقاس: ${selectedSize}`
+      );
     } else {
       setCurrentInventoryItemId(undefined);
-      console.log("لم يتم العثور علي معرفات المتغيرات: ", inventoryIds)
+      console.log("لم يتم العثور علي معرفات المتغيرات: ", inventoryIds);
     }
   }, [selectedColor, selectedSize, inventoryIds]);
 
@@ -90,7 +94,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   };
 
   const handleIncrement = () => {
-    if (quantity < availableStock) { // Only increment if stock allows
+    if (quantity < availableStock) {
+      // Only increment if stock allows
       setQuantity((prev) => prev + 1);
     } else {
       toast({
@@ -123,7 +128,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     if (availableStock === 0 || quantity > availableStock) {
       toast({
         title: "عذراً، المنتج غير متاح حالياً",
-        description: "الكمية المطلوبة غير متوفرة لهذا المقاس واللون. يرجى مراجعة الخيارات المتاحة.",
+        description:
+          "الكمية المطلوبة غير متوفرة لهذا المقاس واللون. يرجى مراجعة الخيارات المتاحة.",
         variant: "destructive",
       });
       setSubmitting(false); // Ensure button is not stuck
@@ -135,10 +141,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
     // تحقق من وجود معرف العنصر في المخزون
     if (!currentInventoryItemId) {
-      console.error("لا يمكن العثور على معرف العنصر في المخزون للتركيبة المختارة", { selectedColor, selectedSize });
+      console.error(
+        "لا يمكن العثور على معرف العنصر في المخزون للتركيبة المختارة",
+        { selectedColor, selectedSize }
+      );
       toast({
         title: "مشكلة في المخزون",
-        description: "لا يمكن العثور على معرف العنصر في المخزون للتركيبة المختارة. يرجى المحاولة لاحقًا.",
+        description:
+          "لا يمكن العثور على معرف العنصر في المخزون للتركيبة المختارة. يرجى المحاولة لاحقًا.",
         variant: "destructive",
       });
       setSubmitting(false);
@@ -179,11 +189,21 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
         if (response.ok) {
           // Step 2: Update inventory if inventory ID exists
-          console.log("Updating inventory with ID:", currentInventoryItemId, "Quantity:", quantity);
+          console.log(
+            "Updating inventory with ID:",
+            currentInventoryItemId,
+            "Quantity:",
+            quantity
+          );
           try {
             // Call the API to update inventory quantity
-            await api.updateInventoryItemQuantity(currentInventoryItemId, quantity);
-            console.log(`تم تحديث المخزون بنجاح للعنصر #${currentInventoryItemId} بكمية ${quantity}`);
+            await api.updateInventoryItemQuantity(
+              currentInventoryItemId,
+              quantity
+            );
+            console.log(
+              `تم تحديث المخزون بنجاح للعنصر #${currentInventoryItemId} بكمية ${quantity}`
+            );
           } catch (inventoryError) {
             // Log the error but don't block order success
             console.error("فشل في تحديث المخزون:", inventoryError);
@@ -204,7 +224,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           const errorData = await response.json();
           toast({
             title: "حدث خطأ أثناء إرسال الطلب",
-            description: errorData.detail || errorData.message || "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
+            description:
+              errorData.detail ||
+              errorData.message ||
+              "لم نتمكن من إرسال الطلب في الوقت الحالي. يرجى المحاولة لاحقًا.",
             variant: "destructive",
           });
         }
@@ -269,19 +292,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="address">عنوان الشحن</Label>
-          <Input
-            dir="rtl"
-            id="address"
-            name="address"
-            placeholder="123 شارع مصطفى كامل، شقة 4"
-            value={formData.address}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="governate">المحافظة</Label>
           <Input
             id="governate"
@@ -300,6 +310,18 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             name="city"
             placeholder="مصر الجديدة"
             value={formData.city}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="address">عنوان الشحن بالتفصيل</Label>
+          <Input
+            dir="rtl"
+            id="address"
+            name="address"
+            placeholder="123 شارع مصطفى كامل، شقة 4"
+            value={formData.address}
             onChange={handleChange}
             required
           />
@@ -345,7 +367,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               onClick={handleIncrement}
               type="button"
               className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground transition-all duration-200"
-              disabled={quantity >= availableStock} 
+              disabled={quantity >= availableStock}
             >
               +
             </Button>
@@ -409,10 +431,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             value={totalWithShipping.toFixed(2)}
           />
           {currentInventoryItemId && (
-            <Input 
-              type="hidden" 
-              name="inventory_item_id" 
-              value={currentInventoryItemId} 
+            <Input
+              type="hidden"
+              name="inventory_item_id"
+              value={currentInventoryItemId}
             />
           )}
         </div>
@@ -429,7 +451,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         <Button
           type="submit"
           className="w-full mt-4 bg-gold hover:bg-gold/90 text-white"
-          disabled={submitting || !selectedSize || !selectedColor || quantity <= 0 || availableStock === 0 || quantity > availableStock }
+          disabled={
+            submitting ||
+            !selectedSize ||
+            !selectedColor ||
+            quantity <= 0 ||
+            availableStock === 0 ||
+            quantity > availableStock
+          }
         >
           {submitting ? (
             <span className="flex items-center justify-center">
