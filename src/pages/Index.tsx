@@ -86,25 +86,25 @@ const Index = () => {
           console.warn("Product state was null while updating inventory.");
           return null;
         }
-        
+
         // دمج بيانات المخزون الجديدة مع بيانات المنتج الموجودة
         const updatedProduct = {
           ...prevProduct, // الاحتفاظ بجميع خصائص المنتج الأخرى
           inventory: inventoryData.inventory, // تحديث كائن المخزون
           inventoryIds: inventoryData.inventoryIds, // تحديث معرفات المخزون
         };
-        
+
         console.log(`Dynamic inventory data updated for product ${updatedProduct.id}`, inventoryData.inventory);
-        
+
         // المقارنة بين المخزون القديم والجديد للتركيبة المحددة
         if (selectedColor && selectedSize) {
           const oldStock = prevProduct.inventory[selectedColor]?.[selectedSize] || 0;
           const newStock = inventoryData.inventory[selectedColor]?.[selectedSize] || 0;
-          
+
           // إذا تغير المخزون للتركيبة المحددة، أظهر إشعارًا للمستخدم
           if (oldStock !== newStock) {
             console.log(`Stock changed for ${selectedColor}/${selectedSize}: ${oldStock} -> ${newStock}`);
-            
+
             // عرض إشعار فقط إذا تغير المخزون بشكل ملحوظ
             if (oldStock > 0 && newStock === 0) {
               toast({
@@ -121,7 +121,7 @@ const Index = () => {
               // إذا أصبحت الكمية المطلوبة أكبر من المخزون المتاح، قم بتعديل الكمية
               const newQuantity = newStock > 0 ? newStock : 1;
               setQuantity(newQuantity);
-              
+
               toast({
                 title: "تعديل الكمية",
                 description: `تم تحديث المخزون المتاح. تم تعديل الكمية لتناسب المخزون الجديد: ${newStock} قطعة.`,
@@ -130,7 +130,7 @@ const Index = () => {
             }
           }
         }
-        
+
         return updatedProduct;
       });
     }
@@ -421,7 +421,7 @@ const Index = () => {
               <hr className="border-t border-gray-300 my-6" />
               {product.videoInfo && <ProductVideo videoInfo={product.videoInfo} />}
               <hr className="border-t border-gray-300 my-6" />
-              <UserReviews />
+              <UserReviews productId={product.id} />
               <hr className="border-t border-gray-300 my-6" />
               <FAQ faqs={product.faqs} />
             </div>
@@ -441,7 +441,7 @@ const Index = () => {
                   setQuantity={setQuantity}
                   availableStock={availableStock}
                   inventory={product.inventory}
-                  inventoryIds={product.inventoryIds} 
+                  inventoryIds={product.inventoryIds}
                 />
               </div>
             </div>

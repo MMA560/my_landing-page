@@ -19,34 +19,38 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { UserReview, BackendReview } from "@/types/review";
 
-export const UserReviews = () => {
+interface UserReviewsProps {
+  productId: number;
+}
+
+export const UserReviews = ({ productId }: UserReviewsProps) => {
   const [displayReviews, setDisplayReviews] = useState<UserReview[]>([]);
   const [sortBy, setSortBy] = useState<string>("recent");
   const [newReview, setNewReview] = useState({
     name: "",
     rating: 5,
     comment: "",
-    product_id: 1, // تهيئة مع معرف منتج افتراضي
+    product_id: productId, // Use the productId from props
   });
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Update the query key to include the productId
   const {
     data: fetchedBackendReviews = [],
     isLoading,
     isError,
   } = useQuery<BackendReview[], Error>({
-    queryKey: ["reviews"],
-    queryFn: api.getAllReviews, // يفترض أن هذا يجلب التقييمات لجميع المنتجات أو منتج معين
-    refetchOnWindowFocus: false, // إضافة هذا لمنع إعادة الجلب التلقائي عند التركيز
-    refetchOnMount: false,      // إضافة هذا لمنع إعادة الجلب التلقائي عند تحميل المكون
-    retry: 1,                   // تحديد عدد مرات إعادة المحاولة في حالة الفشل
+    queryKey: ["reviews", productId],
+    queryFn: () => api.getReviewsByProductId(productId), // Use the specific function for product reviews
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    retry: 1,
   });
 
   useEffect(() => {
-
     if (fetchedBackendReviews.length > 0) {
       const mappedReviews: UserReview[] = fetchedBackendReviews.map((backendReview) => ({
         id: backendReview.review_id,
@@ -61,26 +65,23 @@ export const UserReviews = () => {
         product_id: backendReview.product_id,
       }));
 
-      const sorted = [...mappedReviews]; // إنشاء نسخة جديدة للفرز
+      const sorted = [...mappedReviews];
       if (sortBy === "highest") {
         sorted.sort((a, b) => b.rating - a.rating);
       } else if (sortBy === "lowest") {
         sorted.sort((a, b) => a.rating - b.rating);
       } else {
-        // الفرز الافتراضي: الأحدث (بافتراض أن الـ ID الأكبر يعني الأحدث)
+        // Sort by most recent
         sorted.sort((a, b) => b.id - a.id);
       }
-      setDisplayReviews(sorted); // تحديث حالة عرض التقييمات
+      setDisplayReviews(sorted);
     } else {
-      // هذا الجزء هو الأكثر احتمالاً للتسبب في الحلقة إذا كانت fetchedBackendReviews
-      // دائماً مصفوفة فارغة لكن بمرجع جديد في كل مرة.
-      // نقوم بتحديث displayReviews إلى مصفوفة فارغة فقط إذا لم تكن فارغة بالفعل.
+      // Only update to empty array if not already empty
       if (displayReviews.length !== 0) {
         setDisplayReviews([]);
-      } else {
       }
     }
-  }, [JSON.stringify(fetchedBackendReviews), sortBy, displayReviews.length]); // <--- هنا التعديل لتشخيص المشكلة
+  }, [fetchedBackendReviews, sortBy]);
 
   const averageRating =
     displayReviews.length > 0
@@ -91,8 +92,9 @@ export const UserReviews = () => {
     mutationFn: (reviewData: { reviewer_name: string; rate: number; comment: string; product_id: number }) =>
       api.createReview(reviewData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["reviews"] });
-      setNewReview({ name: "", rating: 5, comment: "", product_id: newReview.product_id });
+      // Invalidate and refetch reviews for this specific product
+      queryClient.invalidateQueries({ queryKey: ["reviews", productId] });
+      setNewReview({ name: "", rating: 5, comment: "", product_id: productId });
       toast({
         title: "تم إرسال التقييم بنجاح",
         description: "شكراً لمشاركتك تجربتك!",
@@ -128,7 +130,7 @@ export const UserReviews = () => {
       reviewer_name: newReview.name,
       rate: newReview.rating,
       comment: newReview.comment,
-      product_id: newReview.product_id,
+      product_id: productId, // Always use the current productId from props
     });
   };
 

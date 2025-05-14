@@ -203,7 +203,7 @@ export const api = {
     getReviewsByProductId: async (productId: number): Promise<BackendReview[]> => {
         try {
             const response = await apiService.get<BackendReview[]>(
-                `/order-app/api/v1/reviews/products/?product_id=${productId}/`
+                `/order-app/api/v1/reviews/products/?product_id=${productId}`
             );
             return response.data;
         } catch (error) {

@@ -1,7 +1,6 @@
 // src/data/productData.ts
 // هذا الملف يحتوي على البيانات الثابتة للمنتجات الأولية.
 
-import { api } from "@/services/api"; // استيراد خدمة الـ API (لا تُستخدم للجلب المباشر هنا، بل في المكون)
 import { FrontendProductInventory, ProductOut } from "@/types/product";
 
 // تعريف نوع داخلي لبيانات عنصر المخزون كما يأتي من الواجهة الخلفية
