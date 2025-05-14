@@ -299,7 +299,6 @@ export const PRODUCTS_DATA: ProductOut[] = [
             { name: "خامات مستوردة", id: "imported-material" },
             { name: "نعل P.V.C بيور", id: "pvc-sole" },
             { name: "فرش طبي", id: "medical-insole" },
-            { name: "مناسب للمهام اليومية", id: "daily-use" },
         ],
         availableSizes: [
             { value: "41", label: "41" },

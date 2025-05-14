@@ -239,13 +239,7 @@ const Index = () => {
   const displayDiscount = product.oldPrice && product.price && product.oldPrice > product.price
     ? Math.floor(((product.oldPrice - product.price) / product.oldPrice) * 100)
     : product.discount || 0;
-  const displayTags = product.tags || [
-    { name: "رجالي", id: "men" },
-    { name: "مناسب للمهام اليومية", id: "daily" },
-    { name: "نعل P.V.C بيور", id: "pvc-sole" },
-    { name: "فرش طبي", id: "medical-insole" },
-    { name: "تلبيس مظبوط", id: "perfect-fit" },
-  ];
+  const displayTags = product.tags 
 
   return (
     <div className="min-h-screen bg-background text-foreground">
