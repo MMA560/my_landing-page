@@ -284,7 +284,8 @@ const Index = () => {
   if (isProductError || !product) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        تعذر العثور على المنتج أو حدث خطأ أثناء التحميل.
+        <RefreshCcwDot className="animate-spin mr-2" size={60} />
+        جارٍ التحميل
       </div>
     );
   }
