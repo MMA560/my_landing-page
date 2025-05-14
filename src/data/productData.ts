@@ -407,6 +407,130 @@ export const PRODUCTS_DATA: ProductOut[] = [
         ],
         inventory: {},
         inventoryIds: {},
-    }
+    },
+    {
+    "id": 4,
+    "name": "كوتشي نوفا حريمي SV23",
+    "nameEn": "Nova Women SV23",
+    "label": "راحة وأناقة كل يوم", 
+    "description": "كوتشي نوفا حريمي SV23 – تصميم عصري ومريح بخامات فوندي مستوردة ونعل P.V.C بيور مرن، مناسب للمهام اليومية والخروجات، متوفر بمقاسات 37–41 وبـ3 ألوان أنيقة.", 
+    "price": 450.00, 
+    "oldPrice": 550.00, 
+    "discount": 10, 
+    "tags": [
+        { "name": "حريمي", "id": "women" },
+        { "name": "خامات مستوردة", "id": "imported-material" },
+        { "name": "نعل P.V.C بيور", "id": "pvc-sole" },
+        { "name": "فرش طبي", "id": "medical-insole" }
+    ],
+    "availableSizes": [
+        { "value": "37", "label": "37" },
+        { "value": "38", "label": "38" },
+        { "value": "39", "label": "39" },
+        { "value": "40", "label": "40" },
+        { "value": "41", "label": "41" }
+    ],
+    "availableColors": [
+        { "value": "white_kashmir", "label": "أبيض * كشمير", "image": "https://i.imgur.com/14796gi.png" },
+        { "value": "white_black", "label": "أبيض * أسود", "image": "https://i.imgur.com/Lml7c7U.png" },
+        { "value": "white_gray", "label": "أبيض * رمادي", "image": "https://i.imgur.com/6WHCAZB.png" }
+    ],
+    "galleryImages": {
+        "white_kashmir": [
+            { "src": "https://i.imgur.com/8usIX5g.png", "alt": "كوتشي - الصورة الرئيسية" },
+            { "src": "https://i.imgur.com/14796gi.png", "alt": "كوتشي كشمير - جانب" },
+            { "src": "https://i.imgur.com/Lml7c7U.png", "alt": "كوتشي أسود - جانب" },
+            { "src": "https://i.imgur.com/6WHCAZB.png", "alt": "كوتشي رمادي - جانب" }
+        ],
+        "white_black": [
+            { "src": "https://i.imgur.com/Lml7c7U.png", "alt": "كوتشي أسود - جانب" },
+            { "src": "https://i.imgur.com/8usIX5g.png", "alt": "كوتشي - الصورة الرئيسية" },
+            { "src": "https://i.imgur.com/14796gi.png", "alt": "كوتشي كشمير - جانب" },
+            { "src": "https://i.imgur.com/6WHCAZB.png", "alt": "كوتشي رمادي - جانب" }
+        ],
+        "white_gray": [
+            { "src": "https://i.imgur.com/6WHCAZB.png", "alt": "كوتشي رمادي - جانب" },
+            { "src": "https://i.imgur.com/8usIX5g.png", "alt": "كوتشي - الصورة الرئيسية" },
+            { "src": "https://i.imgur.com/14796gi.png", "alt": "كوتشي كشمير - جانب" },
+            { "src": "https://i.imgur.com/Lml7c7U.png", "alt": "كوتشي أسود - جانب" }
+        ]
+    },
+    "detailsSections": [
+        {
+            "title": "الخامات والتصنيع",
+            "items": [
+                "سطح خارجي بخامات فوندي مستوردة عالية الجودة",
+                "نعل خارجي P.V.C بيور مرن يدعم الحركة ويخفف الضغط",
+                "فرش داخلي طبي مريح وداعم للقدم",
+                "تلبيس مضبوط يمنح الثبات والراحة أثناء الاستخدام"
+            ]
+        },
+        {
+            "title": "الميزات والفوائد",
+            "items": [
+                "مناسب لجميع المهام اليومية والخروجات",
+                "تصميم عصري وأنيق يناسب مختلف الأذواق",
+                "وزن خفيف لراحة تدوم طوال اليوم",
+                "متوفر بـ3 ألوان أنيقة: كشمير، أسود، و رمادي، وبالمقاسات من 37 لـ41"
+            ]
+        }
+    ],
+    "highlights": [
+        {
+            "title": "خامات فوندي مستوردة",
+            "description": "خامة علوية فاخرة من فوندي المستورد تعزز المتانة والمظهر الراقي.",
+            "iconName": "leather"
+        },
+        {
+            "title": "نعل P.V.C بيور مرن",
+            "description": "نعل مرن يوفر امتصاص ممتاز للصدمات وراحة أثناء الحركة.",
+            "iconName": "handmade"
+        },
+        {
+            "title": "فرش طبي مريح",
+            "description": "مصمم خصيصًا لدعم القدم وتقليل الإجهاد اليومي.",
+            "iconName": "comfort"
+        },
+        {
+            "title": "تلبيس مثالي",
+            "description": "تلبيس مضبوط يمنح الثبات في الحركة طوال اليوم.",
+            "iconName": "eco"
+        }
+    ],
+    "videoInfo": {
+        "title": "فيديو المنتج - نوفا حريمي SV23",
+        "videoUrl": "https://youtube.com/shorts/OAEHx24EP-c",
+        "thumbnail": "https://i.imgur.com/8usIX5g.png",
+        "overlayText": "شوف راحة وأناقة نوفا SV23",
+        "descriptionTitle": "تعرف على كوتشي نوفا حريمي SV23",
+        "description": "في هذا الفيديو، نعرض تفاصيل كوتشي **نوفا حريمي SV23** – من الخامات المستوردة الفاخرة إلى النعل المرن والفرش الطبي. مثالي للمهام اليومية والخروجات بفضل التصميم العصري والتلبيس المظبوط. متوفر بمقاسات 37 إلى 41، وبألوان: كشمير، أسود، و رمادي.",
+        "features": [
+            "تصميم عصري ومريح",
+            "خامات فوندي مستوردة",
+            "راحة مثالية طوال اليوم"
+        ]
+    },
+    "faqs": [
+        {
+            "question": "ما هي خامات كوتشي نوفا حريمي SV23؟",
+            "answer": "الخامة الأساسية هي فوندي مستوردة، مع نعل خارجي P.V.C بيور وفرش داخلي طبي مريح."
+        },
+        {
+            "question": "هل التلبيس مضبوط؟",
+            "answer": "نعم، الكوتشي يأتي بتلبيس مظبوط يناسب المقاسات القياسية، من 37 حتى 41."
+        },
+        {
+            "question": "ما الألوان المتوفرة؟",
+            "answer": "يتوفر الكوتشي بـ 3 ألوان: كشمير، أسود، و رمادي."
+        },
+        {
+            "question": "هل يناسب الاستخدام اليومي؟",
+            "answer": "بكل تأكيد، فهو مصمم ليكون مريحًا وعصريًا في آن واحد، مما يجعله مثاليًا للمهام اليومية والخروجات."
+        }
+    ],
+    "inventory": {},
+    "inventoryIds": {}
+}
+,
     
 ];
