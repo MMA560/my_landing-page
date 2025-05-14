@@ -7,8 +7,21 @@ interface ProductVideoProps {
     videoInfo: FrontendProductVideoData;
 }
 
+const isYouTubeUrl = (url: string): boolean => {
+    return url.includes("youtube.com") || url.includes("youtu.be");
+};
+
+const extractYouTubeId = (url: string): string | null => {
+  const regex =
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
+};
+
 export const ProductVideo: React.FC<ProductVideoProps> = ({ videoInfo }) => {
     const [isPlaying, setIsPlaying] = useState(false);
+    const isYouTube = isYouTubeUrl(videoInfo.videoUrl);
+    const youtubeId = isYouTube ? extractYouTubeId(videoInfo.videoUrl) : null;
 
     return (
         <div className="space-y-6">
@@ -17,12 +30,23 @@ export const ProductVideo: React.FC<ProductVideoProps> = ({ videoInfo }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                 <div className="relative aspect-video bg-muted overflow-hidden rounded-lg border border-border">
                     {isPlaying ? (
-                        <video
-                            className="absolute inset-0 w-full h-full"
-                            src={videoInfo.videoUrl}
-                            controls
-                            autoPlay
-                        />
+                        isYouTube && youtubeId ? (
+                            <iframe
+                                className="absolute inset-0 w-full h-full rounded-lg"
+                                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+                                title="YouTube video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            ></iframe>
+                        ) : (
+                            <video
+                                className="absolute inset-0 w-full h-full"
+                                src={videoInfo.videoUrl}
+                                controls
+                                autoPlay
+                            />
+                        )
                     ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                             <img

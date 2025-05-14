@@ -15,7 +15,7 @@ import { UserReviews } from "@/components/UserReviews";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tag } from "lucide-react";
+import { RefreshCcwDot, Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // استيراد خدمة الـ API والأنواع المطلوبة
@@ -238,12 +238,13 @@ const Index = () => {
 
   // التعامل مع حالة تحميل أو خطأ في بيانات المنتج
   if (isLoadingProduct) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        جارٍ تحميل بيانات المنتج...
-      </div>
-    );
-  }
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+      <RefreshCcwDot className="animate-spin mr-2" size={60} />
+    جارٍ التحميل 
+    </div>
+  );
+}
 
   if (isProductError || !product) {
     return (
