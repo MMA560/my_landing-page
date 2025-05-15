@@ -208,9 +208,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               }`.trim(), // تفاصيل المتغير (لون/مقاس)
             },
           ];
-          // تتبع عماية تقديم الطلب "OrderPlaced" 
+          // تتبع عماية تقديم الطلب "Purchase" 
           // هذا هو السطر الذي سيحل محل fbq('track', 'Purchase');
-          fbq("track", "OrderPlaced", {
+          fbq("track", "Purchase", {
             value: purchaseValue,
             currency: purchaseCurrency,
             contents: purchasedItems,
