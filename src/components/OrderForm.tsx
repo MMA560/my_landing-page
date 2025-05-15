@@ -46,6 +46,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     governate: "",
     notes: "",
   });
+
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const [currentInventoryItemId, setCurrentInventoryItemId] = useState<
@@ -189,6 +190,35 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
         if (response.ok) {
           // Step 2: Update inventory if inventory ID exists
+          const purchaseValue = totalWithShipping; // القيمة الإجمالية للطلب بما في ذلك الشحن
+          const purchaseCurrency = "EGP"; // **تأكد من تغيير 'EGP' إلى العملة الفعلية المستخدمة في متجرك**
+
+          const purchasedItems = [
+            {
+              // معلومات المنتج أو المنتجات المشتراة
+              id: productId ? String(productId) : undefined, // يفضل إرسال الـ id كنص (String)
+              quantity: quantity,
+              item_price: unitPrice,
+              item_name: productName, // اسم المنتج (اختياري لكن مفيد)
+              // يمكنك إضافة تفاصيل إضافية هنا إذا كانت متاحة ومهمة، مثل:
+              // item_brand: 'اسم الماركة',
+              // item_category: 'قسم المنتج',
+              item_variant: `${selectedColor || ""}-${
+                selectedSize || ""
+              }`.trim(), // تفاصيل المتغير (لون/مقاس)
+            },
+          ];
+          // تتبع عماية تقديم الطلب "OrderPlaced" 
+          // هذا هو السطر الذي سيحل محل fbq('track', 'Purchase');
+          fbq("track", "OrderPlaced", {
+            value: purchaseValue,
+            currency: purchaseCurrency,
+            contents: purchasedItems,
+            content_type: "product", // أو 'product_group' إذا كان المنتج عبارة عن مجموعة
+            num_items: quantity, // العدد الإجمالي للقطع في الطلب
+            // يمكنك إضافة معرف الطلب هنا إذا كان لديك orderId من الباك إند:
+            // order_id: orderIdFromBackend,
+          });
           console.log(
             "Updating inventory with ID:",
             currentInventoryItemId,
