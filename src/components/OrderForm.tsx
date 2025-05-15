@@ -227,6 +227,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             "Quantity:",
             quantity
           );
+          console.log("After add Track")
           try {
             // Call the API to update inventory quantity
             await api.updateInventoryItemQuantity(
