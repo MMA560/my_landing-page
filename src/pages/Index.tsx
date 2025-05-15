@@ -15,7 +15,7 @@ import { UserReviews } from "@/components/UserReviews";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tag } from "lucide-react";
+import { RefreshCcwDot, Tag } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // استيراد خدمة الـ API والأنواع المطلوبة
@@ -25,9 +25,6 @@ import { ProductOut, FrontendProductInventory } from "@/types/product";
 // استيراد React Query
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-// استيراد البيانات الثابتة الأولية للمنتجات - ملاحظة التغيير من PRODUCT_DATA إلى PRODUCTS_DATA
-import { PRODUCTS_DATA, transformInventoryData } from "@/data/productData";
-
 const Index = () => {
   const { productId } = useParams<{ productId: string }>();
   console.log("Product ID from URL:", productId);
@@ -35,7 +32,7 @@ const Index = () => {
   // إنشاء مثيل QueryClient
   const queryClient = useQueryClient();
 
-  // تهيئة حالة المنتج بعد العثور عليه من مصفوفة المنتجات
+  // تهيئة حالة المنتج
   const [product, setProduct] = useState<ProductOut | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -43,19 +40,25 @@ const Index = () => {
   const orderFormRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // البحث عن المنتج المطلوب من المصفوفة حسب المعرف
-  useEffect(() => {
-    if (productId) {
-      const foundProduct = PRODUCTS_DATA.find(p => p.id === parseInt(productId));
-      if (foundProduct) {
-        console.log(`Found product with ID ${productId}:`, foundProduct.name);
-        setProduct(foundProduct);
-      } else {
-        console.warn(`Product with ID ${productId} not found.`);
-        setProduct(null);
+  // استخدام React Query لجلب بيانات المنتج
+  const {
+    data: productData,
+    isLoading: isLoadingProduct,
+    isError: isProductError,
+  } = useQuery({
+    queryKey: ["product", productId],
+    queryFn: async () => {
+      if (!productId) {
+        throw new Error("Product ID is missing from URL.");
       }
-    }
-  }, [productId]);
+      const fetchedProduct = await api.getProductById(parseInt(productId));
+      if (!fetchedProduct) {
+        throw new Error(`Product with ID ${productId} not found.`);
+      }
+      return fetchedProduct;
+    },
+    enabled: !!productId, // تعطيل الاستعلام إذا لم يكن هناك معرف منتج
+  });
 
   // استخدام React Query لجلب المخزون مع تحديث تلقائي
   const {
@@ -66,7 +69,9 @@ const Index = () => {
     queryKey: ["inventory", productId],
     queryFn: async () => {
       if (!productId) {
-        throw new Error("Product ID is missing from URL. Cannot fetch dynamic inventory.");
+        throw new Error(
+          "Product ID is missing from URL. Cannot fetch dynamic inventory."
+        );
       }
       return await api.getInventoryByProductId(parseInt(productId));
     },
@@ -78,10 +83,18 @@ const Index = () => {
     enabled: !!productId, // تعطيل الاستعلام إذا لم يكن هناك معرف منتج
   });
 
+  // تحديث حالة المنتج عند استلام بيانات المنتج من API
+  useEffect(() => {
+    if (productData) {
+      console.log(`Fetched product with ID ${productId}:`, productData.name);
+      setProduct(productData);
+    }
+  }, [productData, productId]);
+
   // تحديث حالة المنتج عند استلام بيانات المخزون الجديدة
   useEffect(() => {
     if (inventoryData && product) {
-      setProduct(prevProduct => {
+      setProduct((prevProduct) => {
         if (!prevProduct) {
           console.warn("Product state was null while updating inventory.");
           return null;
@@ -94,22 +107,30 @@ const Index = () => {
           inventoryIds: inventoryData.inventoryIds, // تحديث معرفات المخزون
         };
 
-        console.log(`Dynamic inventory data updated for product ${updatedProduct.id}`, inventoryData.inventory);
+        console.log(
+          `Dynamic inventory data updated for product ${updatedProduct.id}`,
+          inventoryData.inventory
+        );
 
         // المقارنة بين المخزون القديم والجديد للتركيبة المحددة
         if (selectedColor && selectedSize) {
-          const oldStock = prevProduct.inventory[selectedColor]?.[selectedSize] || 0;
-          const newStock = inventoryData.inventory[selectedColor]?.[selectedSize] || 0;
+          const oldStock =
+            prevProduct.inventory[selectedColor]?.[selectedSize] || 0;
+          const newStock =
+            inventoryData.inventory[selectedColor]?.[selectedSize] || 0;
 
           // إذا تغير المخزون للتركيبة المحددة، أظهر إشعارًا للمستخدم
           if (oldStock !== newStock) {
-            console.log(`Stock changed for ${selectedColor}/${selectedSize}: ${oldStock} -> ${newStock}`);
+            console.log(
+              `Stock changed for ${selectedColor}/${selectedSize}: ${oldStock} -> ${newStock}`
+            );
 
             // عرض إشعار فقط إذا تغير المخزون بشكل ملحوظ
             if (oldStock > 0 && newStock === 0) {
               toast({
                 title: "تنبيه المخزون",
-                description: "هذا المنتج لم يعد متوفرًا في المخزون للمقاس واللون المحددين.",
+                description:
+                  "هذا المنتج لم يعد متوفرًا في المخزون للمقاس واللون المحددين.",
                 variant: "destructive",
               });
             } else if (oldStock === 0 && newStock > 0) {
@@ -138,10 +159,20 @@ const Index = () => {
 
   // useEffect لتعيين اللون والمقاس الافتراضي بعد تهيئة المنتج
   useEffect(() => {
-    if (product && product.availableColors && product.availableColors.length > 0 && !selectedColor) {
+    if (
+      product &&
+      product.availableColors &&
+      product.availableColors.length > 0 &&
+      !selectedColor
+    ) {
       setSelectedColor(product.availableColors[0].value);
     }
-    if (product && product.availableSizes && product.availableSizes.length > 0 && !selectedSize) {
+    if (
+      product &&
+      product.availableSizes &&
+      product.availableSizes.length > 0 &&
+      !selectedSize
+    ) {
       setSelectedSize(product.availableSizes[0].value);
     }
   }, [product]);
@@ -161,20 +192,35 @@ const Index = () => {
 
   // يتم تحديد ما إذا كان زر الطلب يجب أن يكون معطلاً
   const isOrderDisabled = useMemo(() => {
-    return !product || !selectedSize || !selectedColor || quantity <= 0 || !isQuantityAvailable || availableStock === 0;
-  }, [product, selectedSize, selectedColor, quantity, isQuantityAvailable, availableStock]);
+    return (
+      !product ||
+      !selectedSize ||
+      !selectedColor ||
+      quantity <= 0 ||
+      !isQuantityAvailable ||
+      availableStock === 0
+    );
+  }, [
+    product,
+    selectedSize,
+    selectedColor,
+    quantity,
+    isQuantityAvailable,
+    availableStock,
+  ]);
 
   const scrollToOrderForm = () => {
     if (isOrderDisabled) {
       toast({
         title: "خطأ في الطلب",
-        description: !selectedSize || !selectedColor
-          ? "يرجى اختيار المقاس واللون."
-          : availableStock === 0
+        description:
+          !selectedSize || !selectedColor
+            ? "يرجى اختيار المقاس واللون."
+            : availableStock === 0
             ? "هذا المقاس واللون غير متوفرين حاليًا."
             : !isQuantityAvailable
-              ? `الكمية المطلوبة (${quantity}) غير متوفرة لهذا المقاس واللون. الكمية المتاحة: ${availableStock}.`
-              : "يرجى تحديد الكمية.",
+            ? `الكمية المطلوبة (${quantity}) غير متوفرة لهذا المقاس واللون. الكمية المتاحة: ${availableStock}.`
+            : "يرجى تحديد الكمية.",
         variant: "destructive",
       });
       return;
@@ -225,21 +271,36 @@ const Index = () => {
     }
   };
 
-  // التعامل مع حالة عدم تحميل بيانات المنتج الأولية
-  if (!product) {
+  // التعامل مع حالة تحميل أو خطأ في بيانات المنتج
+  if (isLoadingProduct) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        المنتج غير موجود أو جارٍ تحميل بياناته الأولية...
+        <RefreshCcwDot className="animate-spin mr-2" size={60} />
+        جارٍ التحميل
       </div>
     );
   }
 
+  if (isProductError || !product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <RefreshCcwDot className="animate-spin mr-2" size={60} />
+        جارٍ التحميل
+      </div>
+    );
+  }
+
+  // إعداد بيانات العرض للعميل
   const displayPrice = product.price;
-  const displayOldPrice = product.oldPrice || (product.price * 1.11).toFixed(2);
-  const displayDiscount = product.oldPrice && product.price && product.oldPrice > product.price
-    ? Math.floor(((product.oldPrice - product.price) / product.oldPrice) * 100)
-    : product.discount || 0;
-  const displayTags = product.tags 
+  const displayOldPrice = product.oldPrice || null;
+  const displayDiscount =
+    product.discount ||
+    (product.oldPrice && product.price && product.oldPrice > product.price
+      ? Math.floor(
+          ((product.oldPrice - product.price) / product.oldPrice) * 100
+        )
+      : 0);
+  const displayTags = product.tags || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -252,7 +313,10 @@ const Index = () => {
               <span className="text-sm uppercase tracking-widest text-muted-foreground mb-2 inline-block">
                 {product.label || "كفاءة وأناقة"}
               </span>
-              <h1 className="text-4xl md:text-5xl font-serif font-medium mb-4" dir="rtl">
+              <h1
+                className="text-4xl md:text-5xl font-serif font-medium mb-4"
+                dir="rtl"
+              >
                 {product.name}
               </h1>
               <p className="text-lg text-muted-foreground mb-6" dir="rtl">
@@ -274,17 +338,20 @@ const Index = () => {
               </div>
 
               {/* السعر والخصم */}
-              <div className="flex flex-row-reverse items-center space-x-reverse space-x-4 mb-6 text-right" >
+              <div className="flex flex-row-reverse items-center space-x-reverse space-x-4 mb-6 text-right">
                 <span className="text-2xl font-bold">
                   جنيه {displayPrice.toFixed(2)}
                 </span>
-                {displayOldPrice && parseFloat(String(displayOldPrice)) > displayPrice && (
-                  <span className="text-sm line-through text-muted-foreground" >
-                    جنيه {parseFloat(String(displayOldPrice)).toFixed(2)}
+                {displayOldPrice && displayOldPrice > displayPrice && (
+                  <span className="text-sm line-through text-muted-foreground">
+                    جنيه {displayOldPrice.toFixed(2)}
                   </span>
                 )}
                 {displayDiscount > 0 && (
-                  <span className="bg-gold/10 text-gold px-2.5 py-0.5 rounded text-sm font-medium" dir="rtl">
+                  <span
+                    className="bg-gold/10 text-gold px-2.5 py-0.5 rounded text-sm font-medium"
+                    dir="rtl"
+                  >
                     خصم {displayDiscount}%
                   </span>
                 )}
@@ -299,9 +366,11 @@ const Index = () => {
                   selectedColor={selectedColor}
                   onSizeChange={(size) => {
                     setSelectedSize(size);
-                    const newAvailableStock = product.inventory[selectedColor || '']?.[size] || 0;
+                    const newAvailableStock =
+                      product.inventory[selectedColor || ""]?.[size] || 0;
                     if (quantity > newAvailableStock) {
-                      const cappedQuantity = newAvailableStock > 0 ? newAvailableStock : 1;
+                      const cappedQuantity =
+                        newAvailableStock > 0 ? newAvailableStock : 1;
                       setQuantity(cappedQuantity);
                       if (cappedQuantity < quantity) {
                         toast({
@@ -314,9 +383,11 @@ const Index = () => {
                   }}
                   onColorChange={(color) => {
                     setSelectedColor(color);
-                    const newAvailableStock = product.inventory[color]?.[selectedSize || ''] || 0;
+                    const newAvailableStock =
+                      product.inventory[color]?.[selectedSize || ""] || 0;
                     if (quantity > newAvailableStock) {
-                      const cappedQuantity = newAvailableStock > 0 ? newAvailableStock : 1;
+                      const cappedQuantity =
+                        newAvailableStock > 0 ? newAvailableStock : 1;
                       setQuantity(cappedQuantity);
                       if (cappedQuantity < quantity) {
                         toast({
@@ -328,16 +399,19 @@ const Index = () => {
                     }
                   }}
                   inventory={product.inventory}
-                  selectedGalleryColor={selectedColor || (product.availableColors[0]?.value || "general")}
+                  selectedGalleryColor={
+                    selectedColor ||
+                    product.availableColors[0]?.value ||
+                    "general"
+                  }
                 />
                 {selectedSize && selectedColor && (
-                  <p dir="rtl" className="mt-2 text-xs text-muted-foreground" >
+                  <p dir="rtl" className="mt-2 text-xs text-muted-foreground">
                     {isLoadingInventory
                       ? `... جارٍ تحميل بيانات المخزون`
                       : availableStock > 0
-                        ? `المخزون المتاح: ${availableStock} قطعة`
-                        : `هذا المقاس واللون غير متوفرين حاليًا.`
-                    }
+                      ? `المخزون المتاح: ${availableStock} قطعة`
+                      : `هذا المقاس واللون غير متوفرين حاليًا.`}
                   </p>
                 )}
               </div>
@@ -370,7 +444,9 @@ const Index = () => {
                   <Button
                     onClick={increaseQuantity}
                     className="px-6 py-3 text-xl rounded-lg border border-gray-400 bg-background hover:bg-background/80 text-foreground"
-                    disabled={quantity >= availableStock || availableStock === 0}
+                    disabled={
+                      quantity >= availableStock || availableStock === 0
+                    }
                   >
                     +
                   </Button>
@@ -384,7 +460,7 @@ const Index = () => {
                 size="lg"
                 disabled={isOrderDisabled}
               >
-                {isLoadingInventory ? 'جاري التحميل...' : 'اطلب الآن'}
+                {isLoadingInventory ? "جاري التحميل..." : "اطلب الآن"}
               </Button>
             </div>
 
@@ -393,14 +469,17 @@ const Index = () => {
               <div className="w-full max-w-md">
                 <Gallery
                   galleryImages={product.galleryImages}
-                  selectedColor={selectedColor || (product.availableColors[0]?.value || "general")}
+                  selectedColor={
+                    selectedColor ||
+                    product.availableColors[0]?.value ||
+                    "general"
+                  }
                 />
               </div>
             </div>
           </div>
         </div>
       </section>
-
       {/* أقسام المحتوى الأخرى */}
       <section className="py-12">
         <div className="container mx-auto px-4">
@@ -413,7 +492,9 @@ const Index = () => {
                 sections={product.detailsSections}
               />
               <hr className="border-t border-gray-300 my-6" />
-              {product.videoInfo && <ProductVideo videoInfo={product.videoInfo} />}
+              {product.videoInfo && (
+                <ProductVideo videoInfo={product.videoInfo} />
+              )}
               <hr className="border-t border-gray-300 my-6" />
               <UserReviews productId={product.id} />
               <hr className="border-t border-gray-300 my-6" />
@@ -442,8 +523,9 @@ const Index = () => {
           </div>
         </div>
       </section>
-
       <Footer />
+      {/* Pass real data to StickyCTA */}
+           {" "}
       <StickyCTA
         scrollToOrderForm={scrollToOrderForm}
         currentPrice={displayPrice} // تم تمرير السعر الحقيقي للمنتج
