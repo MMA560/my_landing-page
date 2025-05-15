@@ -133,12 +133,12 @@ const Index = () => {
                   "هذا المنتج لم يعد متوفرًا في المخزون للمقاس واللون المحددين.",
                 variant: "destructive",
               });
-            } else if (oldStock === 0 && newStock > 0) {
-              toast({
-                title: "تحديث المخزون",
-                description: `تم تحديث المخزون! هذا المنتج أصبح متاحًا الآن (${newStock} قطعة متوفرة).`,
-              });
-            } else if (newStock < quantity) {
+            } //else if (oldStock === 0 && newStock > 0) {
+            //toast({
+            //  title: "تحديث المخزون",
+            // description: `تم تحديث المخزون! هذا المنتج أصبح متاحًا الآن (${newStock} قطعة متوفرة).`,
+            //});}
+            else if (newStock < quantity) {
               // إذا أصبحت الكمية المطلوبة أكبر من المخزون المتاح، قم بتعديل الكمية
               const newQuantity = newStock > 0 ? newStock : 1;
               setQuantity(newQuantity);
@@ -274,7 +274,8 @@ const Index = () => {
   // التعامل مع حالة تحميل أو خطأ في بيانات المنتج
   if (isLoadingProduct) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground space-y-4">
+        {" "}
         <RefreshCcwDot className="animate-spin mr-2" size={60} />
         جارٍ التحميل
       </div>
@@ -283,7 +284,8 @@ const Index = () => {
 
   if (isProductError || !product) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground space-y-4">
+        {" "}
         <RefreshCcwDot className="animate-spin mr-2" size={60} />
         جارٍ التحميل
       </div>
@@ -524,8 +526,7 @@ const Index = () => {
         </div>
       </section>
       <Footer />
-      {/* Pass real data to StickyCTA */}
-           {" "}
+      {/* Pass real data to StickyCTA */}     {" "}
       <StickyCTA
         scrollToOrderForm={scrollToOrderForm}
         currentPrice={displayPrice} // تم تمرير السعر الحقيقي للمنتج

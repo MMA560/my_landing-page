@@ -14,6 +14,7 @@ import { Policies } from "./pages/Policies";
 import { AboutUs } from "./pages/AboutUs";
 import { SizingGuide } from "./pages/SizingGuide";
 import { CareInstructions } from "./pages/CareInstructions";
+import { WhatsAppButton } from "./components/whatsAppButton";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      <WhatsAppButton phoneNumber="+201033156756" message="Hello! I'm interested shoes ." />
     </TooltipProvider>
   </QueryClientProvider>
 );
