@@ -210,6 +210,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           ];
           // تتبع عماية تقديم الطلب "Purchase" 
           // هذا هو السطر الذي سيحل محل fbq('track', 'Purchase');
+          console.log("Before Track")
           fbq("track", "Purchase", {
             value: purchaseValue,
             currency: purchaseCurrency,
@@ -219,6 +220,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             // يمكنك إضافة معرف الطلب هنا إذا كان لديك orderId من الباك إند:
             // order_id: orderIdFromBackend,
           });
+          console.log("After Track")
           console.log(
             "Updating inventory with ID:",
             currentInventoryItemId,
