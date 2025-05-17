@@ -21,6 +21,7 @@ type OrderFormProps = {
   availableStock: number;
   inventory: FrontendProductInventory;
   inventoryIds?: Record<string, Record<string, number>>; // Added inventoryIds prop to access product_inventory_id
+  availableColors?: Array<{ value: string; label: string; image: string }>;
 };
 
 export const OrderForm: React.FC<OrderFormProps> = ({
@@ -34,6 +35,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   availableStock,
   inventory,
   inventoryIds,
+  availableColors = [],
 }) => {
   const { toast } = useToast();
   const form = useRef<HTMLFormElement>(null);
@@ -208,9 +210,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               }`.trim(), // تفاصيل المتغير (لون/مقاس)
             },
           ];
-          // تتبع عماية تقديم الطلب "Purchase" 
+          // تتبع عماية تقديم الطلب "Purchase"
           // هذا هو السطر الذي سيحل محل fbq('track', 'Purchase');
-          console.log("Before Track")
+          console.log("Before Track");
           fbq("track", "Purchase", {
             value: purchaseValue,
             currency: "EGP",
@@ -220,14 +222,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             // يمكنك إضافة معرف الطلب هنا إذا كان لديك orderId من الباك إند:
             // order_id: orderIdFromBackend,
           });
-          console.log("After Track")
+          console.log("After Track");
           console.log(
             "Updating inventory with ID:",
             currentInventoryItemId,
             "Quantity:",
             quantity
           );
-          console.log("After add Track")
+          console.log("After add Track");
           try {
             // Call the API to update inventory quantity
             await api.updateInventoryItemQuantity(
@@ -278,6 +280,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   const totalPrice = unitPrice * quantity;
   const totalWithShipping = totalPrice + shippingCost;
+
+  // الحصول على معلومات اللون المختار لعرضه في ملخص الطلب
+  const selectedColorInfo = availableColors.find(
+    (color) => color.value === selectedColor
+  );
+  const colorDisplayName = selectedColorInfo?.label || selectedColor;
+  const colorImage = selectedColorInfo?.image;
 
   return (
     <form
@@ -421,9 +430,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               </li>
             )}
             {selectedColor && (
-              <li className="flex justify-between">
+              <li className="flex justify-between items-center">
                 <span>اللون:</span>
-                <span className="font-medium capitalize">{selectedColor}</span>
+                <div className="flex items-center gap-2">
+                  {colorImage && (
+                    <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-300">
+                      <img
+                        src={colorImage}
+                        alt={colorDisplayName}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <span className="font-medium">{colorDisplayName}</span>
+                </div>
               </li>
             )}
             <li className="flex justify-between">

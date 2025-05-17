@@ -408,7 +408,14 @@ const Index = () => {
                   }
                 />
                 {selectedSize && selectedColor && (
-                  <p dir="rtl" className="mt-2 text-xs text-muted-foreground">
+                  <p
+                    dir="rtl"
+                    className={`mt-2 text-xs ${
+                      !isLoadingInventory && availableStock <= 0
+                        ? "text-red-600" // لون أحمر في حالة عدم التوفر
+                        : "text-muted-foreground" // اللون الافتراضي في باقي الحالات
+                    }`}
+                  >
                     {isLoadingInventory
                       ? `... جارٍ تحميل بيانات المخزون`
                       : availableStock > 0
@@ -519,6 +526,7 @@ const Index = () => {
                   availableStock={availableStock}
                   inventory={product.inventory}
                   inventoryIds={product.inventoryIds}
+                  availableColors={product.availableColors} // إضافة هذا السطر
                 />
               </div>
             </div>
