@@ -213,7 +213,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           console.log("Before Track")
           fbq("track", "Purchase", {
             value: purchaseValue,
-            currency: purchaseCurrency,
+            currency: "EGP",
             contents: purchasedItems,
             content_type: "product", // أو 'product_group' إذا كان المنتج عبارة عن مجموعة
             num_items: quantity, // العدد الإجمالي للقطع في الطلب
