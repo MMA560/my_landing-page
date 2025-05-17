@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config/Config";
 import { RefreshCcwDot } from "lucide-react";
 import { FrontendProductInventory } from "@/types/product";
-import { api } from "@/services/api"; // Import API for inventory update
+import { api } from "@/services/api"; // Import API for inventory update وؤو
 
 type OrderFormProps = {
   productName: string;
@@ -438,7 +438,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       <img
                         src={colorImage}
                         alt={colorDisplayName}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover" 
                       />
                     </div>
                   )}
