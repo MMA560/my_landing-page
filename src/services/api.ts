@@ -67,7 +67,7 @@ export const api = {
   getProductById: async (productId: number): Promise<ProductOut | null> => {
     try {
       const response = await apiService.get<ProductOut>(
-        `/order-app/api/v1/products/?product_id=${productId}` // مسار نقطة نهاية جلب منتج واحد بواسطة المعرف
+        `/order-app/api/v1/products/${productId}` // مسار نقطة نهاية جلب منتج واحد بواسطة المعرف
       );
       return response.data;
     } catch (error) {

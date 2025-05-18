@@ -414,9 +414,9 @@ export const PRODUCTS_DATA: ProductOut[] = [
     "nameEn": "Nova Women SV23",
     "label": "Premium shoes", 
     "description": "كوتشي نوفا حريمي SV23 – تصميم عصري ومريح بخامات فوندي مستوردة ونعل P.V.C بيور مرن، مناسب للمهام اليومية والخروجات، متوفر بمقاسات 37–41 وبـ3 ألوان أنيقة.", 
-    "price": 450.00, 
-    "oldPrice": 550.00, 
-    "discount": 10, 
+    "price": 470.00, 
+    "oldPrice": 600.00, 
+    "discount": 14, 
     "tags": [
         { "name": "حريمي", "id": "women" },
         { "name": "خامات مستوردة", "id": "imported-material" },
