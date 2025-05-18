@@ -33,7 +33,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   quantity,
   setQuantity,
   availableStock,
-  inventory,
   inventoryIds,
   availableColors = [],
 }) => {
@@ -69,7 +68,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     }
   }, [selectedColor, selectedSize, inventoryIds]);
 
-  const shippingCost = 50; // تكلفة الشحن
+  const shippingCost = 60; // تكلفة الشحن
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
