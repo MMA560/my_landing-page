@@ -28,7 +28,7 @@ export const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
   if (!showButton) return null;
 
   return (
-    <div className="fixed bottom-16 left-1 md:bottom-4 md:left-auto md:right-8 z-50 flex flex-col items-center space-y-1">
+    <div className="hidden md:flex fixed bottom-4 right-8 z-50 flex-col items-center space-y-1">
       {/* الدائرة الخضراء مع الأيقونة */}
       <a
         href={whatsappUrl}
