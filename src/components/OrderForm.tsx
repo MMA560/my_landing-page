@@ -190,65 +190,69 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         );
 
         if (response.ok) {
-          // Step 2: Update inventory if inventory ID exists
-          const purchaseValue = totalWithShipping; // القيمة الإجمالية للطلب بما في ذلك الشحن
-          const purchaseCurrency = "EGP"; // **تأكد من تغيير 'EGP' إلى العملة الفعلية المستخدمة في متجرك**
+          // Step 1: تحديد القيم المطلوبة للتتبع
+          const purchaseValue = totalWithShipping; // القيمة الكلية للطلب بعد الشحن
+          const purchaseCurrency = "EGP"; // العملة (يمكن تعديلها لاحقًا حسب الموقع)
 
           const purchasedItems = [
             {
-              // معلومات المنتج أو المنتجات المشتراة
-              id: productId ? String(productId) : undefined, // يفضل إرسال الـ id كنص (String)
+              item_id: productId ? String(productId) : undefined, // معرف المنتج بصيغة نص
               quantity: quantity,
-              item_price: unitPrice,
-              item_name: productName, // اسم المنتج (اختياري لكن مفيد)
-              // يمكنك إضافة تفاصيل إضافية هنا إذا كانت متاحة ومهمة، مثل:
-              // item_brand: 'اسم الماركة',
-              // item_category: 'قسم المنتج',
+              price: unitPrice,
+              item_name: productName,
               item_variant: `${selectedColor || ""}-${
                 selectedSize || ""
-              }`.trim(), // تفاصيل المتغير (لون/مقاس)
+              }`.trim(),
             },
           ];
-          // تتبع عماية تقديم الطلب "Purchase"
-          // هذا هو السطر الذي سيحل محل fbq('track', 'Purchase');
-          console.log("Before Track");
+
+          // ✅ تتبع الشراء باستخدام Facebook Pixel
+          console.log("Before FB Pixel Track");
           fbq("track", "Purchase", {
             value: purchaseValue,
-            currency: "EGP",
+            currency: purchaseCurrency,
             contents: purchasedItems,
-            content_type: "product", // أو 'product_group' إذا كان المنتج عبارة عن مجموعة
-            num_items: quantity, // العدد الإجمالي للقطع في الطلب
-            // يمكنك إضافة معرف الطلب هنا إذا كان لديك orderId من الباك إند:
-            // order_id: orderIdFromBackend,
+            content_type: "product",
+            num_items: quantity,
           });
-          console.log("After Track");
+          console.log("After FB Pixel Track");
+
+          // ✅ تتبع الشراء باستخدام Google Analytics 4 (GA4)
+          console.log("Before GA4 Track");
+          gtag("event", "purchase", {
+            currency: purchaseCurrency,
+            value: purchaseValue,
+            items: purchasedItems,
+          });
+          console.log("After GA4 Track");
+
+          // Step 2: تحديث المخزون بعد تأكيد الطلب
           console.log(
             "Updating inventory with ID:",
             currentInventoryItemId,
             "Quantity:",
             quantity
           );
-          console.log("After add Track");
           try {
-            // Call the API to update inventory quantity
             await api.updateInventoryItemQuantity(
               currentInventoryItemId,
               quantity
             );
             console.log(
-              `تم تحديث المخزون بنجاح للعنصر #${currentInventoryItemId} بكمية ${quantity}`
+              `✅ تم تحديث المخزون بنجاح للعنصر #${currentInventoryItemId} بكمية ${quantity}`
             );
           } catch (inventoryError) {
-            // Log the error but don't block order success
-            console.error("فشل في تحديث المخزون:", inventoryError);
-            // Optionally notify admin about inventory update failure
+            console.error("❌ فشل في تحديث المخزون:", inventoryError);
+            // يمكن لاحقًا إرسال إشعار للمسؤول هنا
           }
 
+          // Step 3: إعلام المستخدم بنجاح الطلب
           toast({
             title: "تم تقديم الطلب بنجاح!",
             description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
           });
 
+          // Step 4: إعادة توجيه المستخدم لصفحة الشكر
           navigate("/thank-you", {
             state: {
               customerName: customerName,
@@ -437,7 +441,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       <img
                         src={colorImage}
                         alt={colorDisplayName}
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   )}
