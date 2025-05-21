@@ -35,7 +35,10 @@ export const Footer = () => {
               <div className="flex items-center space-x-2 text-muted-foreground">
                 <Mail className="h-4 w-4" />
                 <a href="mailto:mohamadmegahed320@gmail.com" className="hover:text-foreground transition-colors">
-                  mohamadmegahed320@gmail.com
+                  contact@rushkicks.store
+                </a>
+                <a href="mailto:mohamadmegahed320@gmail.com" className="hover:text-foreground transition-colors">
+                  info@rushkicks.store
                 </a>
               </div>
             </div>
