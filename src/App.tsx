@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // تم استيراد Navigate
 
 import Index from "./pages/Index";
+import HomePage from "./pages/HomePage";
 import NotFound from "./pages/NotFound";
 import ThankYou from "./pages/ThankYou";
 import AdminLogin from "./pages/AdminLogin";
@@ -26,7 +27,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           {/* إعادة توجيه من المسار الأساسي إلى صفحة المنتج (مع الـ ID الوهمي 1) */}
-          <Route path="/" element={<Navigate to="/products/1" replace />} />
+          <Route path="/" element={<HomePage />} />
 
           {/* مسار صفحة المنتج الجديد */}
           <Route path="/products/:productId" element={<Index />} />
