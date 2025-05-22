@@ -8,10 +8,11 @@ import ProductSection from "@/components/ProductSection";
 import { useQuery } from "@tanstack/react-query";
 import { ProductOut } from "@/types/product";
 import { RefreshCcwDot } from "lucide-react";
+import { BASE_URL } from "@/config/Config";
 
 const fetchProducts = async (): Promise<ProductOut[]> => {
   const response = await fetch(
-    "http://localhost:8000/order-app/api/v1/products",
+    `${BASE_URL}/order-app/api/v1/products`,
     {
       headers: {
         accept: "application/json",
