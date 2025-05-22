@@ -496,14 +496,15 @@ const Index = () => {
             <div className="space-y-12">
               <ProductHighlights highlights={product.highlights} />
               <hr className="border-t border-gray-300 my-6" />
+              {product.videoInfo && (
+                <ProductVideo videoInfo={product.videoInfo} />
+              )}
+
+              <hr className="border-t border-gray-300 my-6" />
               <ProductDetails
                 description={product.description || ""}
                 sections={product.detailsSections}
               />
-              <hr className="border-t border-gray-300 my-6" />
-              {product.videoInfo && (
-                <ProductVideo videoInfo={product.videoInfo} />
-              )}
               <hr className="border-t border-gray-300 my-6" />
               <UserReviews productId={product.id} />
               <hr className="border-t border-gray-300 my-6" />
