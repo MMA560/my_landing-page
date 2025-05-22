@@ -15,7 +15,7 @@ import { UserReviews } from "@/components/UserReviews";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCcwDot, Tag } from "lucide-react";
+import { RefreshCcwDot, Tag, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // استيراد خدمة الـ API والأنواع المطلوبة
@@ -284,11 +284,13 @@ const Index = () => {
 
   if (isProductError || !product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground space-y-4">
-        {" "}
-        <RefreshCcwDot className="animate-spin mr-2" size={60} />
-        جارٍ التحميل
+      <div className="min-h-screen flex flex-col items-center justify-center bg-red-100 text-red-700 space-y-4">
+      <XCircle className="mr-2" size={60} />
+      <div className="text-center">
+        <h2 className="text-xl font-semibold">حدث خطأ!</h2>
+        <p className="text-sm">يرجى المحاولة مرة أخرى.</p>
       </div>
+    </div>
     );
   }
 

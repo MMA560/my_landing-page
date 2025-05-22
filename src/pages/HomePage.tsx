@@ -7,7 +7,7 @@ import { FeaturedCategories } from "@/components/FeaturedCategories";
 import ProductSection from "@/components/ProductSection";
 import { useQuery } from "@tanstack/react-query";
 import { ProductOut } from "@/types/product";
-import { RefreshCcwDot } from "lucide-react";
+import { RefreshCcwDot, XCircle } from "lucide-react";
 import { BASE_URL } from "@/config/Config";
 
 const fetchProducts = async (): Promise<ProductOut[]> => {
@@ -46,7 +46,13 @@ const HomePage = () => {
   }
 
   if (isError) {
-    return <div>حدث خطأ في تحميل المنتجات: {error?.message}</div>;
+    return <div className="min-h-screen flex flex-col items-center justify-center bg-red-100 text-red-700 space-y-4">
+      <XCircle className="mr-2" size={60} />
+      <div className="text-center">
+        <h2 className="text-xl font-semibold">حدث خطأ!</h2>
+        <p className="text-sm">يرجى المحاولة مرة أخرى.</p>
+      </div>
+    </div>
   }
 
   const displayedProducts = data?.slice(0, visibleProductsCount) || [];
