@@ -11,28 +11,7 @@ import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-// الحصول على المفضلات المحلية
-const getLocalFavorites = (): number[] => {
-  try {
-    const favorites = localStorage.getItem('localFavorites');
-    return favorites ? JSON.parse(favorites) : [];
-  } catch {
-    return [];
-  }
-};
-
-// حفظ المفضلات محلياً
-const saveLocalFavorites = (favorites: number[]): void => {
-  localStorage.setItem('localFavorites', JSON.stringify(favorites));
-};
-
-// إزالة من المفضلات محلياً
-const removeFromLocalFavorites = (productId: number): void => {
-  const favorites = getLocalFavorites();
-  const filtered = favorites.filter(id => id !== productId);
-  saveLocalFavorites(filtered);
-};
+import { favoritesManager } from "@/services/favoritesManager";
 
 const fetchFavoriteProducts = async (userId: string | undefined): Promise<ProductOut[]> => {
   if (!userId) return [];
@@ -50,7 +29,6 @@ const fetchFavoriteProducts = async (userId: string | undefined): Promise<Produc
     
     return response.json();
   } catch (error) {
-    // في حالة فشل الشبكة، نعرض المفضلات المحلية
     console.warn("فشل في جلب المفضلات من الخادم، جاري استخدام البيانات المحلية");
     throw error;
   }
@@ -81,10 +59,13 @@ const FavoritesPage = () => {
   const queryClient = useQueryClient();
   const [localFavoriteIds, setLocalFavoriteIds] = useState<number[]>([]);
 
-  // جلب المفضلات المحلية عند تحميل الصفحة
+  // الاستماع لتغييرات المفضلات المحلية
   useEffect(() => {
-    const localFavs = getLocalFavorites();
-    setLocalFavoriteIds(localFavs);
+    const unsubscribe = favoritesManager.addListener((favorites) => {
+      setLocalFavoriteIds(favorites);
+    });
+
+    return unsubscribe;
   }, []);
 
   const {
@@ -110,9 +91,8 @@ const FavoritesPage = () => {
       // الحصول على البيانات الحالية
       const previousFavorites = queryClient.getQueryData<ProductOut[]>(["favorites", userId]);
 
-      // التحديث المحلي الفوري
-      removeFromLocalFavorites(productId);
-      setLocalFavoriteIds(prev => prev.filter(id => id !== productId));
+      // التحديث المحلي الفوري باستخدام المدير
+      favoritesManager.removeFavorite(productId);
 
       // تحديث الكاش محلياً
       if (previousFavorites) {
@@ -128,13 +108,8 @@ const FavoritesPage = () => {
         queryClient.setQueryData(["favorites", userId], context.previousFavorites);
       }
       
-      // إعادة إضافة المنتج محلياً
-      const currentLocalFavs = getLocalFavorites();
-      if (!currentLocalFavs.includes(productId)) {
-        currentLocalFavs.push(productId);
-        saveLocalFavorites(currentLocalFavs);
-        setLocalFavoriteIds(currentLocalFavs);
-      }
+      // إعادة إضافة المنتج محلياً باستخدام المدير
+      favoritesManager.addFavorite(productId);
 
       toast.error(`فشل في إزالة المنتج: ${error.message}`);
     },
@@ -148,9 +123,8 @@ const FavoritesPage = () => {
     const numericProductId = parseInt(productId);
     
     if (isLocallyRemoved) {
-      // إذا تم الحذف محلياً بالفعل، فقط نحديث الحالة المحلية
-      removeFromLocalFavorites(numericProductId);
-      setLocalFavoriteIds(prev => prev.filter(id => id !== numericProductId));
+      // إذا تم الحذف محلياً بالفعل، فقط نحديث باستخدام المدير
+      favoritesManager.removeFavorite(numericProductId);
       
       // تحديث الكاش
       const currentFavorites = queryClient.getQueryData<ProductOut[]>(["favorites", userId]);
@@ -173,12 +147,20 @@ const FavoritesPage = () => {
     const missingLocalFavorites = localFavoriteIds.filter(id => !serverProductIds.includes(id));
     
     if (missingLocalFavorites.length > 0) {
-      // هنا يمكنك إضافة منطق لجلب تفاصيل المنتجات المفقودة إذا لزم الأمر
       console.log("منتجات محلية غير موجودة في الخادم:", missingLocalFavorites);
     }
     
     return favoriteProducts;
   }, [favoriteProducts, localFavoriteIds]);
+
+  // تحديث المدير بالمفضلات من الخادم
+  useEffect(() => {
+    if (favoriteProducts && favoriteProducts.length > 0) {
+      const serverFavoriteIds = favoriteProducts.map(product => product.id);
+      // دمج مع المفضلات المحلية بدلاً من الاستبدال
+      favoritesManager.mergeWithServer(serverFavoriteIds);
+    }
+  }, [favoriteProducts]);
 
   if (isLoading) {
     return (
@@ -220,6 +202,8 @@ const FavoritesPage = () => {
     );
   }
 
+  const displayCount = Math.max(allFavoriteProducts?.length || 0, localFavoriteIds.length);
+
   return (
     <div className="min-h-screen rtl-flex-row">
       <Header />
@@ -227,7 +211,7 @@ const FavoritesPage = () => {
         <section className="w-full md:max-w-[65%] mx-auto px-4 py-8 md:py-16">
           <div className="flex flex-col items-center text-center">
             <h1 className="font-serif text-2xl font-medium sm:text-3xl mb-6">
-              مفضلاتي ({allFavoriteProducts?.length || 0})
+              مفضلاتي ({displayCount})
             </h1>
           </div>
 
@@ -241,6 +225,17 @@ const FavoritesPage = () => {
                   isFavorite={true}
                 />
               ))}
+            </div>
+          ) : localFavoriteIds.length > 0 ? (
+            <div className="text-center text-gray-500 mt-8 space-y-4">
+              <HeartOff className="mx-auto mb-4 text-gray-400" size={80} />
+              <div className="space-y-2">
+                <p className="text-lg font-medium">تم حفظ {localFavoriteIds.length} منتج محلياً</p>
+                <p className="text-sm text-muted-foreground">يمكنك عرض تفاصيلها عند الاتصال بالإنترنت</p>
+              </div>
+              <Button onClick={() => refetch()} className="mt-4">
+                إعادة المحاولة
+              </Button>
             </div>
           ) : (
             <div className="text-center text-gray-500 mt-8 space-y-4">

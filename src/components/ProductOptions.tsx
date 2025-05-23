@@ -76,7 +76,7 @@ export const ProductOptions: React.FC<ProductOptionsProps> = ({
                             <button
                                 key={color.value}
                                 aria-label={`اللون: ${color.label}`}
-                                className={`w-10 h-10 rounded-full overflow-hidden border relative ${
+                                className={`w-16 h-16 sm:w-16 sm:h-16 md:w-14 md:h-14 rounded-full overflow-hidden border relative ${
                                     selectedColor === color.value
                                         ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
                                         : ""
