@@ -49,7 +49,7 @@ export const StickyCTA: React.FC<StickyCTAProps> = ({
         <div className="text-sm">
           <p className="font-medium">أطلب دلوقتي</p>
           {/* Use the dynamic price */}
-          <p className="text-lg font-bold" dir="rtl">جنيه {currentPrice.toFixed(2)}</p> 
+          <p className="text-lg font-bold" dir="rtl">جنيه مصري {currentPrice.toFixed(2)}</p> 
         </div>
         <Button 
           onClick={scrollToOrderForm}
