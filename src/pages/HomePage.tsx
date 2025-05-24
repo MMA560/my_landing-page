@@ -12,7 +12,7 @@ import { BASE_URL } from "@/config/Config";
 
 const fetchProducts = async (): Promise<ProductOut[]> => {
   const response = await fetch(
-    `${BASE_URL}/order-app/api/v1/products`,
+    `${BASE_URL}/order-app/api/v1/products/`,
     {
       headers: {
         accept: "application/json",

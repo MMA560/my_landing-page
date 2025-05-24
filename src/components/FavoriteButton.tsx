@@ -39,7 +39,7 @@ const addFavoriteToServer = async ({ userIdentifier, productId }: { userIdentifi
 };
 
 const removeFavoriteFromServer = async ({ userIdentifier, productId }: { userIdentifier: string; productId: number }) => {
-  const response = await fetch(`${BASE_URL}/clear_one`, {
+  const response = await fetch(`${BASE_URL}/order-app/api/v1/favorites/clear_one`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

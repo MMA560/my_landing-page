@@ -3,19 +3,10 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
-import {
-  Eye,
-  Trash2,
-  ChevronDown,
-} from "lucide-react";
+import { Eye, Trash2, ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -30,7 +21,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Order, OrderStatus, orderStatusArabic, orderStatusColors } from "@/types/order";
+import {
+  Order,
+  OrderStatus,
+  orderStatusArabic,
+  orderStatusColors,
+} from "@/types/order";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -53,7 +49,10 @@ export function OrdersTable({
 }: OrdersTableProps) {
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
 
-  const handleStatusChangeInternal = async (orderId: number, newStatus: OrderStatus) => {
+  const handleStatusChangeInternal = async (
+    orderId: number,
+    newStatus: OrderStatus
+  ) => {
     try {
       setUpdatingStatus(orderId);
       await onStatusChange(orderId, newStatus);
@@ -85,8 +84,7 @@ export function OrdersTable({
   };
 
   const formatCurrency = (value: number | string) => {
-    const numberValue =
-      typeof value === "string" ? parseFloat(value) : value;
+    const numberValue = typeof value === "string" ? parseFloat(value) : value;
     return `${numberValue.toLocaleString("ar-EG")} ج.م`;
   };
 
@@ -106,10 +104,11 @@ export function OrdersTable({
                   <TableHead>رقم الطلب</TableHead>
                   <TableHead>اسم العميل</TableHead>
                   <TableHead>الهاتف</TableHead>
-                  <TableHead>المحافظة</TableHead>
+                  <TableHead>العنوان</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>التكلفة</TableHead>
-                  <TableHead>عدد القطع</TableHead> {/* <---  العمود الجديد  ---> */}
+                  <TableHead>عدد القطع</TableHead>{" "}
+                  {/* <---  العمود الجديد  ---> */}
                   <TableHead>تاريخ الإنشاء</TableHead>
                   <TableHead>إجراءات</TableHead>
                 </TableRow>
@@ -117,7 +116,9 @@ export function OrdersTable({
               <TableBody>
                 {orders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center h-24"> {/* <--- تعديل colSpan إلى 9 ---> */}
+                    <TableCell colSpan={9} className="text-center h-24">
+                      {" "}
+                      {/* <--- تعديل colSpan إلى 9 ---> */}
                       {isLoading ? "جاري تحميل البيانات..." : "لا توجد طلبات"}
                     </TableCell>
                   </TableRow>
@@ -127,12 +128,18 @@ export function OrdersTable({
                       key={order.order_id}
                       className={order.is_read ? "" : "bg-green-50/20"}
                     >
-                      <TableCell className="font-medium">#{order.order_id}</TableCell>
+                      <TableCell className="font-medium">
+                        #{order.order_id}
+                      </TableCell>
                       <TableCell>{order.name}</TableCell>
                       <TableCell dir="ltr" className="text-right">
                         {order.phone}
                       </TableCell>
-                      <TableCell>{order.state}</TableCell>
+                      <TableCell>
+                        {order.address && order.address.length > 38
+                          ? `${order.address.substring(0, 38)}...`
+                          : order.address}
+                      </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -140,7 +147,9 @@ export function OrdersTable({
                               size="sm"
                               variant="ghost"
                               className={`${
-                                orderStatusColors[order.status as OrderStatus] || "bg-gray-100 text-gray-800"
+                                orderStatusColors[
+                                  order.status as OrderStatus
+                                ] || "bg-gray-100 text-gray-800"
                               } text-xs h-7 rounded-full gap-1`}
                               disabled={updatingStatus === order.order_id}
                             >
@@ -148,7 +157,9 @@ export function OrdersTable({
                                 "جاري التحديث..."
                               ) : (
                                 <>
-                                  {orderStatusArabic[order.status as OrderStatus] || order.status}
+                                  {orderStatusArabic[
+                                    order.status as OrderStatus
+                                  ] || order.status}
                                   <ChevronDown className="h-3 w-3" />
                                 </>
                               )}
@@ -156,32 +167,72 @@ export function OrdersTable({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onClick={() => handleStatusChangeInternal(order.order_id, "pending")}
-                              disabled={order.status === "pending" || updatingStatus !== null}
+                              onClick={() =>
+                                handleStatusChangeInternal(
+                                  order.order_id,
+                                  "pending"
+                                )
+                              }
+                              disabled={
+                                order.status === "pending" ||
+                                updatingStatus !== null
+                              }
                             >
                               قيد الانتظار
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleStatusChangeInternal(order.order_id, "confirmed")}
-                              disabled={order.status === "confirmed" || updatingStatus !== null}
+                              onClick={() =>
+                                handleStatusChangeInternal(
+                                  order.order_id,
+                                  "confirmed"
+                                )
+                              }
+                              disabled={
+                                order.status === "confirmed" ||
+                                updatingStatus !== null
+                              }
                             >
                               تم التأكيد
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleStatusChangeInternal(order.order_id, "delivering")}
-                              disabled={order.status === "delivering" || updatingStatus !== null}
+                              onClick={() =>
+                                handleStatusChangeInternal(
+                                  order.order_id,
+                                  "delivering"
+                                )
+                              }
+                              disabled={
+                                order.status === "delivering" ||
+                                updatingStatus !== null
+                              }
                             >
                               قيد التسليم
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleStatusChangeInternal(order.order_id, "delivered")}
-                              disabled={order.status === "delivered" || updatingStatus !== null}
+                              onClick={() =>
+                                handleStatusChangeInternal(
+                                  order.order_id,
+                                  "delivered"
+                                )
+                              }
+                              disabled={
+                                order.status === "delivered" ||
+                                updatingStatus !== null
+                              }
                             >
                               تم التسليم
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleStatusChangeInternal(order.order_id, "canceled")}
-                              disabled={order.status === "canceled" || updatingStatus !== null}
+                              onClick={() =>
+                                handleStatusChangeInternal(
+                                  order.order_id,
+                                  "canceled"
+                                )
+                              }
+                              disabled={
+                                order.status === "canceled" ||
+                                updatingStatus !== null
+                              }
                               className="text-red-600"
                             >
                               ملغي
@@ -190,7 +241,8 @@ export function OrdersTable({
                         </DropdownMenu>
                       </TableCell>
                       <TableCell>{formatCurrency(order.total_cost)}</TableCell>
-                      <TableCell>{order.quantity}</TableCell> {/* <--- عرض عدد القطع ---> */}
+                      <TableCell>{order.quantity}</TableCell>{" "}
+                      {/* <--- عرض عدد القطع ---> */}
                       <TableCell>{formatDate(order.created_at)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -202,7 +254,7 @@ export function OrdersTable({
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          
+
                           <Button
                             size="icon"
                             variant="ghost"

@@ -25,12 +25,10 @@ export const ProductCard = ({ product, onRemoveFavorite, isFavorite: propIsFavor
     }
   };
 
-  const addToCart = (e: React.MouseEvent) => {
+  const addToCart = (e: React.MouseEvent, productId : number ) => {
     e.preventDefault();
     e.stopPropagation();
-    // إضافة منطق إضافة المنتج إلى سلة التسوق هنا
-    console.log(`تمت إضافة ${product.name} إلى سلة التسوق`);
-    // يمكنك استخدام مكتبة إدارة الحالة مثل Zustand أو Redux هنا
+    navigate(`/products/${productId}`)
   };
 
   const discountPercentage =
@@ -102,7 +100,7 @@ export const ProductCard = ({ product, onRemoveFavorite, isFavorite: propIsFavor
             <Button
               size="sm"
               className="bg-gold hover:bg-gold/90 text-white h-6 md:h-7 px-1.5 md:px-2 text-[10px] md:text-xs transition-all duration-200 hover:scale-105"
-              onClick={addToCart}
+              onClick={(e)=> addToCart(e, product.id)}
             >
               <ShoppingCart className="ml-0.5 md:ml-1 h-2.5 w-2.5 md:h-3 md:w-3 rtl:mr-0.5 rtl:ml-0 md:rtl:mr-1 md:rtl:ml-0" />
               شراء
