@@ -336,6 +336,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           />
         </div>
 
+        {/*
         <div className="space-y-2">
           <Label htmlFor="governate">المحافظة</Label>
           <Input
@@ -359,13 +360,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             required
           />
         </div>
+        */}
         <div className="space-y-2">
           <Label htmlFor="address">عنوان الشحن بالتفصيل</Label>
           <Input
             dir="rtl"
             id="address"
             name="address"
-            placeholder="123 شارع مصطفى كامل، شقة 4"
+            placeholder="اسم الشارع - المدينة - المحافظة + علامة مميزة"
             value={formData.address}
             onChange={handleChange}
             required
