@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { BASE_URL } from "@/config/Config";
 import { RefreshCcwDot } from "lucide-react";
 import { FrontendProductInventory } from "@/types/product";
-import { api } from "@/services/api"; // Import API for inventory update وؤو
+import { api } from "@/services/api"; // Import API for inventory update
 
 type OrderFormProps = {
   productName: string;
@@ -23,6 +23,30 @@ type OrderFormProps = {
   inventoryIds?: Record<string, Record<string, number>>; // Added inventoryIds prop to access product_inventory_id
   availableColors?: Array<{ value: string; label: string; image: string }>;
 };
+
+// تعريف نوع البيانات المتوقعة من الخادم
+interface OrderResponse {
+  order_id: number;
+  name: string;
+  phone: string;
+  second_phone?: string;
+  address: string;
+  city?: string;
+  state?: string;
+  notes?: string;
+  product: string;
+  color: string;
+  size: string;
+  quantity: number;
+  shipping: string;
+  total_cost: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  is_read: boolean;
+  email?: string;
+  image_url?: string;
+}
 
 export const OrderForm: React.FC<OrderFormProps> = ({
   productName,
@@ -190,6 +214,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         );
 
         if (response.ok) {
+          // الحصول على بيانات الطلب من الاستجابة
+          const orderData: OrderResponse = await response.json();
+
           // Step 1: تحديد القيم المطلوبة للتتبع
           const purchaseValue = totalWithShipping; // القيمة الكلية للطلب بعد الشحن
           const purchaseCurrency = "EGP"; // العملة (يمكن تعديلها لاحقًا حسب الموقع)
@@ -247,15 +274,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           }
 
           // Step 3: إعلام المستخدم بنجاح الطلب
-          toast({
-            title: "تم تقديم الطلب بنجاح!",
-            description: "سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.",
-          });
+          //toast({
+           // title: "تم تقديم الطلب بنجاح!",
+            //description: `تم إرسال طلبك برقم ${orderData.order_id} بنجاح. سنتواصل معك قريبًا لتأكيد تفاصيل طلبك.`,
+          //});
 
-          // Step 4: إعادة توجيه المستخدم لصفحة الشكر
+          // Step 4: إعادة توجيه المستخدم لصفحة الشكر مع رقم الطلب
+          console.log("================================================");
+          console.log("Order ID: ", orderData);
+          console.log("================================================");
           navigate("/thank-you", {
             state: {
               customerName: customerName,
+              orderId: orderData.order_id,
+              orderData: orderData,
             },
           });
         } else {
