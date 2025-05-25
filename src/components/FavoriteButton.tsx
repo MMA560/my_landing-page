@@ -3,8 +3,7 @@ import { Heart } from "lucide-react";
 import { useCookies } from "react-cookie";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { BASE_URL } from "@/config/Config";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { favoritesManager } from "@/services/favoritesManager";
 
 interface FavoriteButtonProps {
@@ -21,43 +20,10 @@ const generateBrowserId = (): string => {
   return newId;
 };
 
-const addFavoriteToServer = async ({ userIdentifier, productId }: { userIdentifier: string; productId: number }) => {
-  const response = await fetch(`${BASE_URL}/order-app/api/v1/favorites/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      accept: "application/json",
-    },
-    body: JSON.stringify({ user_identifier: userIdentifier, product_id: productId }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`فشل في إضافة المنتج إلى المفضلة: ${errorData?.detail || response.statusText}`);
-  }
-  return response.json();
-};
-
-const removeFavoriteFromServer = async ({ userIdentifier, productId }: { userIdentifier: string; productId: number }) => {
-  const response = await fetch(`${BASE_URL}/order-app/api/v1/favorites/clear_one`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      accept: "application/json",
-    },
-    body: JSON.stringify({ user_identifier: userIdentifier, product_id: productId }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`فشل في إزالة المنتج من المفضلة: ${errorData?.detail || response.statusText}`);
-  }
-  return true;
-};
-
 export const FavoriteButton = ({ productId, isFavoriteProp, onFavoriteChange }: FavoriteButtonProps) => {
   const [cookies, setCookie] = useCookies(["userId"]);
   const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
 
   // استخدام حالة محلية مع التحديث من المدير
   const [isFavorite, setIsFavorite] = useState(() => {
@@ -99,54 +65,44 @@ export const FavoriteButton = ({ productId, isFavoriteProp, onFavoriteChange }: 
     }
   }, [isFavoriteProp]);
 
-  const addFavoriteMutation = useMutation({
-    mutationFn: addFavoriteToServer,
-    onMutate: () => {
-      // التحديث المحلي الفوري
-      favoritesManager.addFavorite(productId);
-      onFavoriteChange?.(productId, true);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["favorites", userIdentifier] });
-    },
-    onError: (error: any) => {
-      // إزالة التحديث المحلي في حالة الخطأ
-      favoritesManager.removeFavorite(productId);
-      onFavoriteChange?.(productId, false);
-      toast.error(`فشل في مزامنة المفضلة: ${error.message}`);
-    },
-  });
-
-  const removeFavoriteMutation = useMutation({
-    mutationFn: removeFavoriteFromServer,
-    onMutate: () => {
-      // التحديث المحلي الفوري
-      favoritesManager.removeFavorite(productId);
-      onFavoriteChange?.(productId, false);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["favorites", userIdentifier] });
-    },
-    onError: (error: any) => {
-      // إعادة إضافة التحديث المحلي في حالة الخطأ
-      favoritesManager.addFavorite(productId);
-      onFavoriteChange?.(productId, true);
-      toast.error(`فشل في مزامنة المفضلة: ${error.message}`);
-    },
-  });
-
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!isFavorite) {
-      addFavoriteMutation.mutate({ userIdentifier, productId });
-    } else {
-      removeFavoriteMutation.mutate({ userIdentifier, productId });
+    if (isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      const result = await favoritesManager.toggleFavorite(productId, userIdentifier);
+      
+      if (result.success) {
+        const newIsFavorite = favoritesManager.isFavorite(productId);
+        onFavoriteChange?.(productId, newIsFavorite);
+        
+        // تحديث الكاش
+        queryClient.invalidateQueries({ queryKey: ["favorites", userIdentifier] });
+        
+        if (result.error) {
+          // نجحت العملية لكن مع تحذير
+          toast.warning(result.error);
+        } else {
+          // نجحت العملية بالكامل
+          const message = newIsFavorite ? "تم إضافة المنتج إلى المفضلة" : "تم إزالة المنتج من المفضلة";
+          toast.success(message);
+        }
+      } else {
+        // فشلت العملية
+        toast.error(result.error || "فشل في تحديث المفضلة");
+      }
+    } catch (error: any) {
+      // خطأ غير متوقع
+      console.error("خطأ في تبديل المفضلة:", error);
+      toast.error(`خطأ غير متوقع: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const isLoading = addFavoriteMutation.isPending || removeFavoriteMutation.isPending;
 
   return (
     <button
@@ -162,7 +118,8 @@ export const FavoriteButton = ({ productId, isFavoriteProp, onFavoriteChange }: 
       <Heart
         className={cn(
           "h-3 w-3 md:h-4 md:w-4 transition-all duration-200",
-          isFavorite ? "fill-red-500 text-red-500" : "text-foreground hover:text-red-400"
+          isFavorite ? "fill-red-500 text-red-500" : "text-foreground hover:text-red-400",
+          isLoading && "animate-pulse"
         )}
       />
     </button>

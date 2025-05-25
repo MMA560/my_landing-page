@@ -4,54 +4,13 @@ import { Footer } from "@/components/Footer";
 import { ProductCard } from "@/components/ProductCard";
 import { useCookies } from "react-cookie";
 import { ProductOut } from "@/types/product";
-import { BASE_URL } from "@/config/Config";
 import { HeartOff, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { favoritesManager } from "@/services/favoritesManager";
-
-const fetchFavoriteProducts = async (userId: string | undefined): Promise<ProductOut[]> => {
-  if (!userId) return [];
-  
-  try {
-    const response = await fetch(`${BASE_URL}/order-app/api/v1/favorites/${userId}`, {
-      headers: {
-        accept: "application/json",
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    return response.json();
-  } catch (error) {
-    console.warn("فشل في جلب المفضلات من الخادم، جاري استخدام البيانات المحلية");
-    throw error;
-  }
-};
-
-const removeFavoriteFromServer = async ({ userId, productId }: { userId: string | undefined; productId: number }) => {
-  if (!userId) throw new Error("يجب تسجيل الدخول للإزالة من المفضلة.");
-  
-  const response = await fetch(`${BASE_URL}/clear_one`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      accept: "application/json",
-    },
-    body: JSON.stringify({ user_identifier: userId, product_id: productId }),
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`فشل في إزالة المنتج من المفضلة: ${errorData?.detail || response.statusText}`);
-  }
-  return true;
-};
 
 const FavoritesPage = () => {
   const [cookies] = useCookies(["userId"]);
@@ -76,65 +35,57 @@ const FavoritesPage = () => {
     refetch,
   } = useQuery({
     queryKey: ["favorites", userId],
-    queryFn: () => fetchFavoriteProducts(userId),
+    queryFn: () => favoritesManager.fetchFavoritesFromServer(userId),
     enabled: !!userId,
     staleTime: 1000 * 60 * 5, // 5 دقائق
     retry: 1,
   });
 
-  const { mutate: removeFavoriteMutation, isPending: isRemoving } = useMutation({
-    mutationFn: removeFavoriteFromServer,
-    onMutate: async ({ productId }) => {
-      // إلغاء أي استعلامات جارية
-      await queryClient.cancelQueries({ queryKey: ["favorites", userId] });
-
-      // الحصول على البيانات الحالية
-      const previousFavorites = queryClient.getQueryData<ProductOut[]>(["favorites", userId]);
-
-      // التحديث المحلي الفوري باستخدام المدير
-      favoritesManager.removeFavorite(productId);
-
-      // تحديث الكاش محلياً
-      if (previousFavorites) {
-        const updatedFavorites = previousFavorites.filter(product => product.id !== productId);
-        queryClient.setQueryData(["favorites", userId], updatedFavorites);
-      }
-
-      return { previousFavorites };
-    },
-    onError: (error: any, { productId }, context) => {
-      // في حالة الخطأ، استرجاع الحالة السابقة
-      if (context?.previousFavorites) {
-        queryClient.setQueryData(["favorites", userId], context.previousFavorites);
-      }
-      
-      // إعادة إضافة المنتج محلياً باستخدام المدير
-      favoritesManager.addFavorite(productId);
-
-      toast.error(`فشل في إزالة المنتج: ${error.message}`);
-    },
-    onSettled: () => {
-      // إعادة جلب البيانات للتأكد من التزامن
-      queryClient.invalidateQueries({ queryKey: ["favorites", userId] });
-    },
-  });
-
-  const removeFromFavorites = (productId: string, isLocallyRemoved?: boolean) => {
+  const removeFromFavorites = async (productId: string, isLocallyRemoved?: boolean) => {
     const numericProductId = parseInt(productId);
     
-    if (isLocallyRemoved) {
-      // إذا تم الحذف محلياً بالفعل، فقط نحديث باستخدام المدير
-      favoritesManager.removeFavorite(numericProductId);
-      
-      // تحديث الكاش
-      const currentFavorites = queryClient.getQueryData<ProductOut[]>(["favorites", userId]);
-      if (currentFavorites) {
-        const updatedFavorites = currentFavorites.filter(product => product.id !== numericProductId);
-        queryClient.setQueryData(["favorites", userId], updatedFavorites);
+    if (!userId) {
+      toast.error("يجب تسجيل الدخول للإزالة من المفضلة");
+      return;
+    }
+
+    try {
+      if (isLocallyRemoved) {
+        // إذا تم الحذف محلياً بالفعل، فقط نحديث الكاش
+        favoritesManager.removeFavoriteSync(numericProductId);
+        
+        // تحديث الكاش
+        const currentFavorites = queryClient.getQueryData<ProductOut[]>(["favorites", userId]);
+        if (currentFavorites) {
+          const updatedFavorites = currentFavorites.filter(product => product.id !== numericProductId);
+          queryClient.setQueryData(["favorites", userId], updatedFavorites);
+        }
+      } else {
+        // إزالة من الخادم مع التحديث المحلي
+        const result = await favoritesManager.removeFavorite(numericProductId, userId);
+        
+        if (result.success) {
+          // تحديث الكاش
+          const currentFavorites = queryClient.getQueryData<ProductOut[]>(["favorites", userId]);
+          if (currentFavorites) {
+            const updatedFavorites = currentFavorites.filter(product => product.id !== numericProductId);
+            queryClient.setQueryData(["favorites", userId], updatedFavorites);
+          }
+          
+          if (result.error) {
+            toast.warning(result.error);
+          } else {
+            toast.success("تم إزالة المنتج من المفضلة");
+          }
+        } else {
+          toast.error(result.error || "فشل في إزالة المنتج من المفضلة");
+        }
       }
-    } else {
-      // إزالة من الخادم مع التحديث المحلي
-      removeFavoriteMutation({ userId, productId: numericProductId });
+      
+      // إعادة جلب البيانات للتأكد من التزامن
+      queryClient.invalidateQueries({ queryKey: ["favorites", userId] });
+    } catch (error: any) {
+      toast.error(`خطأ في إزالة المنتج: ${error.message}`);
     }
   };
 
@@ -152,15 +103,6 @@ const FavoritesPage = () => {
     
     return favoriteProducts;
   }, [favoriteProducts, localFavoriteIds]);
-
-  // تحديث المدير بالمفضلات من الخادم
-  useEffect(() => {
-    if (favoriteProducts && favoriteProducts.length > 0) {
-      const serverFavoriteIds = favoriteProducts.map(product => product.id);
-      // دمج مع المفضلات المحلية بدلاً من الاستبدال
-      favoritesManager.mergeWithServer(serverFavoriteIds);
-    }
-  }, [favoriteProducts]);
 
   if (isLoading) {
     return (
